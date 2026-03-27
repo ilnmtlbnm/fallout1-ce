@@ -21,6 +21,14 @@
 #include "plib/gnw/text.h"
 #include "plib/gnw/touch.h"
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+extern "C" {
+    void em_play_movie(const char* name);
+    int em_movie_playing(void);
+}
+#endif
+
 namespace fallout {
 
 #define GAME_MOVIE_WINDOW_WIDTH 640
@@ -102,6 +110,14 @@ int gmovie_save(DB_FILE* stream)
 int gmovie_play(int game_movie, int game_movie_flags)
 {
 #ifdef __EMSCRIPTEN__
+    if (game_movie >= 0 && game_movie < MOVIE_COUNT) {
+        // Delegate to main thread <video> overlay — skip C MVE decoder entirely
+        em_play_movie(movie_list[game_movie]);
+        while (em_movie_playing()) {
+            get_input();
+        }
+        gmovie_played_list[game_movie] = 1;
+    }
     return 0;
 #endif
     dir_entry de;
@@ -207,6 +223,7 @@ int gmovie_play(int game_movie, int game_movie_flags)
         mouse_get_raw_state(&x, &y, &buttons);
 
         v11 |= buttons;
+
     } while (((v11 & 1) == 0 && (v11 & 2) == 0) || (buttons & 1) != 0 || (buttons & 2) != 0);
 
     movieStop();
