@@ -1570,6 +1570,11 @@ static int SaveSlot()
 
     db_fclose(flptr);
 
+#ifdef __EMSCRIPTEN__
+    // IDBFS sync handled by Worker adapter on visibility change / beforeunload.
+    // Do NOT use EM_ASM here — it causes ASM_CONSTS address table corruption.
+#endif
+
     snprintf(gmpath, sizeof(gmpath), "%s\\%s%.2d\\", "SAVEGAME", "SLOT", slot_cursor + 1);
     MapDirErase(gmpath, "BAK");
 
