@@ -101,6 +101,9 @@ int gmovie_save(DB_FILE* stream)
 // 0x44E690
 int gmovie_play(int game_movie, int game_movie_flags)
 {
+#ifdef __EMSCRIPTEN__
+    return 0;
+#endif
     dir_entry de;
     char movieFilePath[COMPAT_MAX_PATH];
 
