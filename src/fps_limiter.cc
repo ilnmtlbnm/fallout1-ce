@@ -2,6 +2,10 @@
 
 #include <SDL.h>
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
+
 namespace fallout {
 
 FpsLimiter::FpsLimiter(unsigned int fps)
@@ -17,9 +21,13 @@ void FpsLimiter::mark()
 
 void FpsLimiter::throttle() const
 {
+#ifdef __EMSCRIPTEN__
+    emscripten_sleep(0);
+#else
     if (1000 / _fps > SDL_GetTicks() - _ticks) {
         SDL_Delay(1000 / _fps - (SDL_GetTicks() - _ticks));
     }
+#endif
 }
 
 } // namespace fallout
