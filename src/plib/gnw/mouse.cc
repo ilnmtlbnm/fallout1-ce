@@ -9,6 +9,10 @@
 #include "plib/gnw/touch.h"
 #include "plib/gnw/vcr.h"
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten/html5.h>
+#endif
+
 namespace fallout {
 
 static void mouse_colorize();
@@ -84,6 +88,31 @@ static bool mouse_disabled;
 // 0x671F38
 static int mouse_buttons;
 
+#ifdef __EMSCRIPTEN__
+static bool em_leftDown = false;
+static bool em_rightDown = false;
+static bool em_leftLatched = false;
+static bool em_rightLatched = false;
+static int em_absX = 320;
+static int em_absY = 240;
+
+static EM_BOOL em_mmove(int ev, const EmscriptenMouseEvent *eme, void *ud) {
+    em_absX = eme->targetX;
+    em_absY = eme->targetY;
+    return EM_TRUE;
+}
+static EM_BOOL em_mclick(int ev, const EmscriptenMouseEvent *eme, void *ud) {
+    if (eme->button == 0) { em_leftDown = true; em_leftLatched = true; }
+    else if (eme->button == 2) { em_rightDown = true; em_rightLatched = true; }
+    return EM_TRUE;
+}
+static EM_BOOL em_mup(int ev, const EmscriptenMouseEvent *eme, void *ud) {
+    if (eme->button == 0) em_leftDown = false;
+    else if (eme->button == 2) em_rightDown = false;
+    return EM_TRUE;
+}
+#endif
+
 // 0x671F10
 static unsigned int mouse_speed;
 
@@ -130,6 +159,12 @@ int GNW_mouse_init()
     mouse_disabled = false;
 
     mouse_is_hidden = true;
+
+#ifdef __EMSCRIPTEN__
+    emscripten_set_mousemove_callback(EMSCRIPTEN_EVENT_TARGET_DOCUMENT, NULL, false, em_mmove);
+    emscripten_set_mousedown_callback(EMSCRIPTEN_EVENT_TARGET_DOCUMENT, NULL, false, em_mclick);
+    emscripten_set_mouseup_callback(EMSCRIPTEN_EVENT_TARGET_DOCUMENT, NULL, false, em_mup);
+#endif
 
     mouse_colorize();
 
@@ -500,6 +535,15 @@ void mouse_info()
     // Adjust for mouse senstivity.
     x = (int)(x * mouse_sensitivity);
     y = (int)(y * mouse_sensitivity);
+
+#ifdef __EMSCRIPTEN__
+    x = em_absX - mouse_x;
+    y = em_absY - mouse_y;
+    if (em_leftDown || em_leftLatched) buttons |= MOUSE_STATE_LEFT_BUTTON_DOWN;
+    if (em_rightDown || em_rightLatched) buttons |= MOUSE_STATE_RIGHT_BUTTON_DOWN;
+    em_leftLatched = false;
+    em_rightLatched = false;
+#endif
 
     if (vcr_state == VCR_STATE_PLAYING) {
         if (((vcr_terminate_flags & VCR_TERMINATE_ON_MOUSE_PRESS) != 0 && buttons != 0)
