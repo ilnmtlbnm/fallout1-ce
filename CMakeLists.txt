@@ -345,7 +345,21 @@ if(APPLE)
     set(MACOSX_BUNDLE_BUNDLE_VERSION "1.0.0")
 endif()
 
-if((NOT ${CMAKE_SYSTEM_NAME} MATCHES "Linux") AND (NOT ${CMAKE_SYSTEM_NAME} MATCHES "FreeBSD") AND (NOT ${CMAKE_SYSTEM_NAME} MATCHES "OpenBSD"))
+if(EMSCRIPTEN)
+  target_compile_options(${EXECUTABLE_NAME} PUBLIC "--use-port=sdl2")
+  target_link_options(${EXECUTABLE_NAME} PUBLIC
+    "--use-port=sdl2"
+    -sASYNCIFY
+    -sASYNCIFY_STACK_SIZE=10000000
+    -sALLOW_MEMORY_GROWTH
+    -sEXIT_RUNTIME=1
+    -lidbfs.js
+    -sEXPORTED_RUNTIME_METHODS=callMain
+  )
+  target_compile_options(${EXECUTABLE_NAME} PUBLIC -fno-lto)
+  target_link_options(${EXECUTABLE_NAME} PUBLIC -fno-lto)
+  target_compile_definitions(${EXECUTABLE_NAME} PUBLIC __EMSCRIPTEN__)
+elseif((NOT ${CMAKE_SYSTEM_NAME} MATCHES "Linux") AND (NOT ${CMAKE_SYSTEM_NAME} MATCHES "FreeBSD") AND (NOT ${CMAKE_SYSTEM_NAME} MATCHES "OpenBSD"))
     add_subdirectory("third_party/sdl2")
 else()
     find_package(SDL2)
@@ -357,8 +371,10 @@ target_link_libraries(${EXECUTABLE_NAME} adecode::adecode)
 add_subdirectory("third_party/fpattern")
 target_link_libraries(${EXECUTABLE_NAME} fpattern::fpattern)
 
-target_link_libraries(${EXECUTABLE_NAME} ${SDL2_LIBRARIES})
-target_include_directories(${EXECUTABLE_NAME} PRIVATE ${SDL2_INCLUDE_DIRS})
+if(NOT EMSCRIPTEN)
+  target_link_libraries(${EXECUTABLE_NAME} ${SDL2_LIBRARIES})
+  target_include_directories(${EXECUTABLE_NAME} PRIVATE ${SDL2_INCLUDE_DIRS})
+endif()
 
 if(APPLE)
     if(IOS)
