@@ -18,6 +18,10 @@
 #include "plib/gnw/vcr.h"
 #include "plib/gnw/winmain.h"
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
+
 namespace fallout {
 
 typedef struct GNW95RepeatStruct {
@@ -184,6 +188,9 @@ int get_input()
 {
     int v3;
 
+#ifdef __EMSCRIPTEN__
+    emscripten_sleep(0);
+#endif
     GNW95_process_message();
 
     if (!GNW95_isActive) {
