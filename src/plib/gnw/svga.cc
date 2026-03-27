@@ -5,6 +5,10 @@
 #include "plib/gnw/mouse.h"
 #include "plib/gnw/winmain.h"
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
+
 namespace fallout {
 
 static bool createRenderer(int width, int height);
@@ -78,17 +82,28 @@ void GNW95_ShowRect(unsigned char* src, unsigned int srcPitch, unsigned int a3, 
     destRect.x = destX;
     destRect.y = destY;
     SDL_BlitSurface(gSdlSurface, &srcRect, gSdlTextureSurface, &destRect);
+#ifdef __EMSCRIPTEN__
+    renderPresent();
+#endif
 }
 
 bool svga_init(VideoOptions* video_options)
 {
+#ifdef __EMSCRIPTEN__
+    SDL_SetHint(SDL_HINT_RENDER_DRIVER, "software");
+#else
     SDL_SetHint(SDL_HINT_RENDER_DRIVER, "opengl");
+#endif
 
     if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
         return false;
     }
 
+#ifdef __EMSCRIPTEN__
+    Uint32 windowFlags = SDL_WINDOW_ALLOW_HIGHDPI;
+#else
     Uint32 windowFlags = SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI;
+#endif
 
     if (video_options->fullscreen) {
         windowFlags |= SDL_WINDOW_FULLSCREEN;
