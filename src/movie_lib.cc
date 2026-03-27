@@ -12,6 +12,10 @@
 #include "audio_engine.h"
 #include "platform_compat.h"
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
+
 namespace fallout {
 
 typedef struct STRUCT_6B3690 {
@@ -797,11 +801,13 @@ static int _syncWait()
 
     result = 0;
     if (_sync_active) {
+#ifndef __EMSCRIPTEN__
         if (((_sync_time + 1000 * compat_timeGetTime()) & 0x80000000) != 0) {
             result = 1;
             while (((_sync_time + 1000 * compat_timeGetTime()) & 0x80000000) != 0)
                 ;
         }
+#endif
         _sync_time += _sync_wait_quanta;
     }
 
@@ -1156,8 +1162,10 @@ static int _MVE_sndConfigure(int a1, int a2, int a3, int a4, int a5, int a6)
 static void _MVE_syncSync()
 {
     if (_sync_active) {
+#ifndef __EMSCRIPTEN__
         while (((_sync_time + 1000 * compat_timeGetTime()) & 0x80000000) != 0) {
         }
+#endif
     }
 }
 
@@ -1320,10 +1328,14 @@ static int _syncWaitLevel(int a1)
         return 0;
     }
 
+#ifndef __EMSCRIPTEN__
     v2 = _sync_time + a1;
     do {
         result = v2 + 1000 * compat_timeGetTime();
     } while (result < 0);
+#else
+    result = 0;
+#endif
 
     _sync_time += _sync_wait_quanta;
 
