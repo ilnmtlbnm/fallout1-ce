@@ -53,7 +53,7 @@ namespace fallout {
 static bool main_init_system(int argc, char** argv);
 static int main_reset_system();
 static void main_exit_system();
-static int main_load_new(char* fname);
+static int main_load_new(const char* fname);
 static int main_loadgame_new();
 static void main_unload_new();
 static void main_game_loop();
@@ -65,7 +65,7 @@ static void main_death_scene();
 static void main_death_voiceover_callback();
 
 // 0x4F9F70
-static char mainMap[] = "V13Ent.map";
+static const char* mainMap = "V13Ent.map";
 
 // 0x505A6C
 int main_game_paused = 0;
@@ -227,6 +227,11 @@ static bool main_init_system(int argc, char** argv)
         return false;
     }
 
+    dir_entry de;
+    if (db_dir_entry("maps\\JUNKDEMO.MAP", &de) == 0) {
+        mainMap = "JUNKDEMO.map";
+    }
+
     // NOTE: Uninline.
     main_selfrun_init();
 
@@ -256,7 +261,7 @@ static void main_exit_system()
 }
 
 // 0x472958
-static int main_load_new(char* mapFileName)
+static int main_load_new(const char* mapFileName)
 {
     game_user_wants_to_quit = 0;
     main_show_death_scene = 0;
@@ -272,7 +277,7 @@ static int main_load_new(char* mapFileName)
     map_init();
     gmouse_set_cursor(MOUSE_CURSOR_NONE);
     mouse_show();
-    map_load(mapFileName);
+    map_load(const_cast<char*>(mapFileName));
     PlayCityMapMusic();
     palette_fade_to(white_palette);
     win_delete(win);
