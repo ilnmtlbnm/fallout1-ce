@@ -111,6 +111,13 @@ int gmovie_play(int game_movie, int game_movie_flags)
 {
 #ifdef __EMSCRIPTEN__
     if (game_movie >= 0 && game_movie < MOVIE_COUNT) {
+        dir_entry de;
+        char movieFilePath[COMPAT_MAX_PATH];
+        snprintf(movieFilePath, sizeof(movieFilePath), "art\\cuts\\%s", movie_list[game_movie]);
+        if (db_dir_entry(movieFilePath, &de) != 0) {
+            debug_printf("\ngmovie_play() - skipping missing movie: %s\n", movie_list[game_movie]);
+            return 0;
+        }
         // Delegate to main thread <video> overlay — skip C MVE decoder entirely
         em_play_movie(movie_list[game_movie]);
         while (em_movie_playing()) {
