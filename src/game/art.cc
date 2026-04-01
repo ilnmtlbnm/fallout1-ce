@@ -103,19 +103,16 @@ int art_init()
             art[objectType].dir,
             art[objectType].dir);
 
-        if (objectType == OBJ_TYPE_CRITTER) {
+        if (objectType == OBJ_TYPE_CRITTER && critter_db_handle != INVALID_DATABASE_HANDLE) {
             old_db_handle = db_current();
             critter_db_selected = true;
             db_select(critter_db_handle);
         }
 
         if (art_read_lst(path, &(art[objectType].fileNames), &(art[objectType].fileNamesLength)) != 0) {
-            debug_printf("art_read_lst failed in art_init\n");
-            if (critter_db_selected) {
-                db_select(old_db_handle);
-            }
-            cache_exit(&art_cache);
-            return -1;
+            debug_printf("art_read_lst failed for %s in art_init (continuing)\n", art[objectType].dir);
+            art[objectType].fileNames = NULL;
+            art[objectType].fileNamesLength = 0;
         }
 
         if (objectType == OBJ_TYPE_CRITTER) {
@@ -124,57 +121,67 @@ int art_init()
         }
     }
 
-    anon_alias = (int*)mem_malloc(sizeof(*anon_alias) * art[OBJ_TYPE_CRITTER].fileNamesLength);
-    if (anon_alias == NULL) {
-        art[OBJ_TYPE_CRITTER].fileNamesLength = 0;
-        debug_printf("Out of memory for anon_alias in art_init\n");
-        cache_exit(&art_cache);
-        return -1;
-    }
-
-    snprintf(path, sizeof(path), "%s%s%s\\%s.lst",
-        cd_path_base,
-        "art\\",
-        art[OBJ_TYPE_CRITTER].dir,
-        art[OBJ_TYPE_CRITTER].dir);
-
-    old_db_handle = db_current();
-    db_select(critter_db_handle);
-
-    stream = db_fopen(path, "rt");
-    if (stream == NULL) {
-        debug_printf("Unable to open %s in art_init\n", path);
-        db_select(old_db_handle);
-        cache_exit(&art_cache);
-        return -1;
-    }
-
-    char* critterFileNames = art[OBJ_TYPE_CRITTER].fileNames;
-    for (int critterIndex = 0; critterIndex < art[OBJ_TYPE_CRITTER].fileNamesLength; critterIndex++) {
-        if (compat_stricmp(critterFileNames, "hmjmps") == 0) {
-            art_vault_person_nums[GENDER_MALE] = critterIndex;
-        } else if (compat_stricmp(critterFileNames, "hfjmps") == 0) {
-            art_vault_person_nums[GENDER_FEMALE] = critterIndex;
+    if (art[OBJ_TYPE_CRITTER].fileNamesLength > 0) {
+        anon_alias = (int*)mem_malloc(sizeof(*anon_alias) * art[OBJ_TYPE_CRITTER].fileNamesLength);
+        if (anon_alias == NULL) {
+            art[OBJ_TYPE_CRITTER].fileNamesLength = 0;
+            debug_printf("Out of memory for anon_alias in art_init\n");
+            cache_exit(&art_cache);
+            return -1;
         }
 
-        critterFileNames += 13;
-    }
+        snprintf(path, sizeof(path), "%s%s%s\\%s.lst",
+            cd_path_base,
+            "art\\",
+            art[OBJ_TYPE_CRITTER].dir,
+            art[OBJ_TYPE_CRITTER].dir);
 
-    for (int critterIndex = 0; critterIndex < art[OBJ_TYPE_CRITTER].fileNamesLength; critterIndex++) {
-        if (!db_fgets(string, sizeof(string), stream)) {
-            break;
+        old_db_handle = db_current();
+        if (critter_db_handle != INVALID_DATABASE_HANDLE) {
+            db_select(critter_db_handle);
         }
 
-        char* sep1 = strchr(string, ',');
-        if (sep1 != NULL) {
-            anon_alias[critterIndex] = atoi(sep1 + 1);
-        } else {
-            anon_alias[critterIndex] = art_vault_guy_num;
+        stream = db_fopen(path, "rt");
+        if (stream == NULL) {
+            debug_printf("Unable to open %s in art_init\n", path);
+            if (critter_db_handle != INVALID_DATABASE_HANDLE) {
+                db_select(old_db_handle);
+            }
+            cache_exit(&art_cache);
+            return -1;
         }
-    }
 
-    db_fclose(stream);
-    db_select(old_db_handle);
+        char* critterFileNames = art[OBJ_TYPE_CRITTER].fileNames;
+        for (int critterIndex = 0; critterIndex < art[OBJ_TYPE_CRITTER].fileNamesLength; critterIndex++) {
+            if (compat_stricmp(critterFileNames, "hmjmps") == 0) {
+                art_vault_person_nums[GENDER_MALE] = critterIndex;
+            } else if (compat_stricmp(critterFileNames, "hfjmps") == 0) {
+                art_vault_person_nums[GENDER_FEMALE] = critterIndex;
+            }
+
+            critterFileNames += 13;
+        }
+
+        for (int critterIndex = 0; critterIndex < art[OBJ_TYPE_CRITTER].fileNamesLength; critterIndex++) {
+            if (!db_fgets(string, sizeof(string), stream)) {
+                break;
+            }
+
+            char* sep1 = strchr(string, ',');
+            if (sep1 != NULL) {
+                anon_alias[critterIndex] = atoi(sep1 + 1);
+            } else {
+                anon_alias[critterIndex] = art_vault_guy_num;
+            }
+        }
+
+        db_fclose(stream);
+        if (critter_db_handle != INVALID_DATABASE_HANDLE) {
+            db_select(old_db_handle);
+        }
+    } else {
+        anon_alias = NULL;
+    }
 
     char* tileFileNames = art[OBJ_TYPE_TILE].fileNames;
     for (int tileIndex = 0; tileIndex < art[OBJ_TYPE_TILE].fileNamesLength; tileIndex++) {
@@ -184,26 +191,27 @@ int art_init()
         tileFileNames += 13;
     }
 
-    head_info = (HeadDescription*)mem_malloc(sizeof(*head_info) * art[OBJ_TYPE_HEAD].fileNamesLength);
-    if (head_info == NULL) {
-        art[OBJ_TYPE_HEAD].fileNamesLength = 0;
-        debug_printf("Out of memory for head_info in art_init\n");
-        cache_exit(&art_cache);
-        return -1;
-    }
+    if (art[OBJ_TYPE_HEAD].fileNamesLength > 0) {
+        head_info = (HeadDescription*)mem_malloc(sizeof(*head_info) * art[OBJ_TYPE_HEAD].fileNamesLength);
+        if (head_info == NULL) {
+            art[OBJ_TYPE_HEAD].fileNamesLength = 0;
+            debug_printf("Out of memory for head_info in art_init\n");
+            cache_exit(&art_cache);
+            return -1;
+        }
 
-    snprintf(path, sizeof(path), "%s%s%s\\%s.lst",
-        cd_path_base,
-        "art\\",
-        art[OBJ_TYPE_HEAD].dir,
-        art[OBJ_TYPE_HEAD].dir);
+        snprintf(path, sizeof(path), "%s%s%s\\%s.lst",
+            cd_path_base,
+            "art\\",
+            art[OBJ_TYPE_HEAD].dir,
+            art[OBJ_TYPE_HEAD].dir);
 
-    stream = db_fopen(path, "rt");
-    if (stream == NULL) {
-        debug_printf("Unable to open %s in art_init\n", path);
-        cache_exit(&art_cache);
-        return -1;
-    }
+        stream = db_fopen(path, "rt");
+        if (stream == NULL) {
+            debug_printf("Unable to open %s in art_init\n", path);
+            cache_exit(&art_cache);
+            return -1;
+        }
 
     for (int headIndex = 0; headIndex < art[OBJ_TYPE_HEAD].fileNamesLength; headIndex++) {
         char* sep1;
@@ -246,9 +254,12 @@ int art_init()
         }
 
         head_info[headIndex].badFidgetCount = atoi(sep3 + 1);
-    }
+        }
 
-    db_fclose(stream);
+        db_fclose(stream);
+    } else {
+        head_info = NULL;
+    }
 
     return 0;
 }
