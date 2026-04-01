@@ -110,13 +110,12 @@ int art_init()
         }
 
         if (art_read_lst(path, &(art[objectType].fileNames), &(art[objectType].fileNamesLength)) != 0) {
-            debug_printf("art_read_lst failed for %s in art_init (skipping)\n", path);
-            art[objectType].fileNames = NULL;
-            art[objectType].fileNamesLength = 0;
+            debug_printf("art_read_lst failed in art_init\n");
             if (critter_db_selected) {
                 db_select(old_db_handle);
-                critter_db_selected = false;
             }
+            cache_exit(&art_cache);
+            return -1;
         }
 
         if (objectType == OBJ_TYPE_CRITTER) {
@@ -185,75 +184,71 @@ int art_init()
         tileFileNames += 13;
     }
 
-    if (art[OBJ_TYPE_HEAD].fileNamesLength > 0) {
-        head_info = (HeadDescription*)mem_malloc(sizeof(*head_info) * art[OBJ_TYPE_HEAD].fileNamesLength);
-        if (head_info == NULL) {
-            art[OBJ_TYPE_HEAD].fileNamesLength = 0;
-            debug_printf("Out of memory for head_info in art_init\n");
-            cache_exit(&art_cache);
-            return -1;
-        }
-
-        snprintf(path, sizeof(path), "%s%s%s\\%s.lst",
-            cd_path_base,
-            "art\\",
-            art[OBJ_TYPE_HEAD].dir,
-            art[OBJ_TYPE_HEAD].dir);
-
-        stream = db_fopen(path, "rt");
-        if (stream == NULL) {
-            debug_printf("Unable to open %s in art_init\n", path);
-            cache_exit(&art_cache);
-            return -1;
-        }
-
-        for (int headIndex = 0; headIndex < art[OBJ_TYPE_HEAD].fileNamesLength; headIndex++) {
-            char* sep1;
-            char* sep2;
-            char* sep3;
-            char* sep4;
-
-            if (!db_fgets(string, sizeof(string), stream)) {
-                break;
-            }
-
-            sep1 = strchr(string, ',');
-            if (sep1 != NULL) {
-                *sep1 = '\0';
-            } else {
-                sep1 = string;
-            }
-
-            sep2 = strchr(sep1, ',');
-            if (sep2 != NULL) {
-                *sep2 = '\0';
-            } else {
-                sep2 = sep1;
-            }
-
-            head_info[headIndex].goodFidgetCount = atoi(sep1 + 1);
-
-            sep3 = strchr(sep2, ',');
-            if (sep3 != NULL) {
-                *sep3 = '\0';
-            } else {
-                sep3 = sep2;
-            }
-
-            head_info[headIndex].neutralFidgetCount = atoi(sep2 + 1);
-
-            sep4 = strpbrk(sep3 + 1, " ,;\t\n");
-            if (sep4 != NULL) {
-                *sep4 = '\0';
-            }
-
-            head_info[headIndex].badFidgetCount = atoi(sep3 + 1);
-        }
-
-        db_fclose(stream);
-    } else {
-        head_info = NULL;
+    head_info = (HeadDescription*)mem_malloc(sizeof(*head_info) * art[OBJ_TYPE_HEAD].fileNamesLength);
+    if (head_info == NULL) {
+        art[OBJ_TYPE_HEAD].fileNamesLength = 0;
+        debug_printf("Out of memory for head_info in art_init\n");
+        cache_exit(&art_cache);
+        return -1;
     }
+
+    snprintf(path, sizeof(path), "%s%s%s\\%s.lst",
+        cd_path_base,
+        "art\\",
+        art[OBJ_TYPE_HEAD].dir,
+        art[OBJ_TYPE_HEAD].dir);
+
+    stream = db_fopen(path, "rt");
+    if (stream == NULL) {
+        debug_printf("Unable to open %s in art_init\n", path);
+        cache_exit(&art_cache);
+        return -1;
+    }
+
+    for (int headIndex = 0; headIndex < art[OBJ_TYPE_HEAD].fileNamesLength; headIndex++) {
+        char* sep1;
+        char* sep2;
+        char* sep3;
+        char* sep4;
+
+        if (!db_fgets(string, sizeof(string), stream)) {
+            break;
+        }
+
+        sep1 = strchr(string, ',');
+        if (sep1 != NULL) {
+            *sep1 = '\0';
+        } else {
+            sep1 = string;
+        }
+
+        sep2 = strchr(sep1, ',');
+        if (sep2 != NULL) {
+            *sep2 = '\0';
+        } else {
+            sep2 = sep1;
+        }
+
+        head_info[headIndex].goodFidgetCount = atoi(sep1 + 1);
+
+        sep3 = strchr(sep2, ',');
+        if (sep3 != NULL) {
+            *sep3 = '\0';
+        } else {
+            sep3 = sep2;
+        }
+
+        head_info[headIndex].neutralFidgetCount = atoi(sep2 + 1);
+
+        sep4 = strpbrk(sep3 + 1, " ,;\t\n");
+        if (sep4 != NULL) {
+            *sep4 = '\0';
+        }
+
+        head_info[headIndex].badFidgetCount = atoi(sep3 + 1);
+    }
+
+    db_fclose(stream);
 
     return 0;
 }
