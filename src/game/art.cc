@@ -165,41 +165,43 @@ int art_init()
 
         stream = db_fopen(path, "rt");
         if (stream == NULL) {
-            debug_printf("Unable to open %s in art_init\n", path);
+            debug_printf("Unable to open %s in art_init (continuing)\n", path);
             if (critter_db_handle != INVALID_DATABASE_HANDLE) {
                 db_select(old_db_handle);
             }
-            cache_exit(&art_cache);
-            return -1;
-        }
-
-        char* critterFileNames = art[OBJ_TYPE_CRITTER].fileNames;
-        for (int critterIndex = 0; critterIndex < art[OBJ_TYPE_CRITTER].fileNamesLength; critterIndex++) {
-            if (compat_stricmp(critterFileNames, "hmjmps") == 0) {
-                art_vault_person_nums[GENDER_MALE] = critterIndex;
-            } else if (compat_stricmp(critterFileNames, "hfjmps") == 0) {
-                art_vault_person_nums[GENDER_FEMALE] = critterIndex;
+            // Set default aliases for all critters
+            for (int ci = 0; ci < art[OBJ_TYPE_CRITTER].fileNamesLength; ci++) {
+                anon_alias[ci] = art_vault_guy_num;
             }
+        } else {
+            char* critterFileNames = art[OBJ_TYPE_CRITTER].fileNames;
+            for (int critterIndex = 0; critterIndex < art[OBJ_TYPE_CRITTER].fileNamesLength; critterIndex++) {
+                if (compat_stricmp(critterFileNames, "hmjmps") == 0) {
+                    art_vault_person_nums[GENDER_MALE] = critterIndex;
+                } else if (compat_stricmp(critterFileNames, "hfjmps") == 0) {
+                    art_vault_person_nums[GENDER_FEMALE] = critterIndex;
+                }
 
             critterFileNames += 13;
         }
 
-        for (int critterIndex = 0; critterIndex < art[OBJ_TYPE_CRITTER].fileNamesLength; critterIndex++) {
-            if (!db_fgets(string, sizeof(string), stream)) {
-                break;
+            for (int critterIndex = 0; critterIndex < art[OBJ_TYPE_CRITTER].fileNamesLength; critterIndex++) {
+                if (!db_fgets(string, sizeof(string), stream)) {
+                    break;
+                }
+
+                char* sep1 = strchr(string, ',');
+                if (sep1 != NULL) {
+                    anon_alias[critterIndex] = atoi(sep1 + 1);
+                } else {
+                    anon_alias[critterIndex] = art_vault_guy_num;
+                }
             }
 
-            char* sep1 = strchr(string, ',');
-            if (sep1 != NULL) {
-                anon_alias[critterIndex] = atoi(sep1 + 1);
-            } else {
-                anon_alias[critterIndex] = art_vault_guy_num;
+            db_fclose(stream);
+            if (critter_db_handle != INVALID_DATABASE_HANDLE) {
+                db_select(old_db_handle);
             }
-        }
-
-        db_fclose(stream);
-        if (critter_db_handle != INVALID_DATABASE_HANDLE) {
-            db_select(old_db_handle);
         }
     } else {
         anon_alias = NULL;
