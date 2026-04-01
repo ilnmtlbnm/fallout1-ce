@@ -125,6 +125,24 @@ int art_init()
     }
 
     printf("[DEMO-DEBUG] art_init: lst loop done. critter=%d head=%d\n", art[OBJ_TYPE_CRITTER].fileNamesLength, art[OBJ_TYPE_HEAD].fileNamesLength);
+    // Fallback: if critters.lst was missing, hardcode the demo's 10 critter types
+    if (art[OBJ_TYPE_CRITTER].fileNamesLength == 0) {
+        static const char* demo_critters[] = {
+            "hfjmps", "hflthr", "hfmetl", "hmjmps", "hmlthr",
+            "hmmetl", "mabrom", "maddog", "nmlosr", "reserv"
+        };
+        int count = sizeof(demo_critters) / sizeof(demo_critters[0]);
+        art[OBJ_TYPE_CRITTER].fileNames = (char*)mem_malloc(count * 13);
+        if (art[OBJ_TYPE_CRITTER].fileNames != NULL) {
+            art[OBJ_TYPE_CRITTER].fileNamesLength = count;
+            for (int i = 0; i < count; i++) {
+                char* dest = art[OBJ_TYPE_CRITTER].fileNames + (i * 13);
+                strncpy(dest, demo_critters[i], 12);
+                dest[12] = '\0';
+            }
+            printf("[DEMO-DEBUG] art_init: injected %d critter types for demo\n", count);
+        }
+    }
     if (art[OBJ_TYPE_CRITTER].fileNamesLength > 0) {
         anon_alias = (int*)mem_malloc(sizeof(*anon_alias) * art[OBJ_TYPE_CRITTER].fileNamesLength);
         if (anon_alias == NULL) {
