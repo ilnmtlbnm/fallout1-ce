@@ -128,19 +128,30 @@ int game_init(const char* windowTitle, bool isMapper, int font, int flags, int a
 {
     char path[COMPAT_MAX_PATH];
 
+    printf("\n[DEMO-DEBUG] game_init: start\n");
+
     if (gmemory_init() == -1) {
+        printf("\n[DEMO-DEBUG] game_init: gmemory_init FAILED\n");
         return -1;
     }
+
+    printf("\n[DEMO-DEBUG] game_init: gmemory_init OK\n");
 
     gconfig_init(isMapper, argc, argv);
 
+    printf("\n[DEMO-DEBUG] game_init: gconfig_init OK\n");
+
     game_in_mapper = isMapper;
 
+    printf("\n[DEMO-DEBUG] game_init: calling game_init_databases\n");
     if (game_init_databases() == -1) {
+        printf("\n[DEMO-DEBUG] game_init: game_init_databases FAILED\n");
         gconfig_exit(false);
         return -1;
     }
+    printf("\n[DEMO-DEBUG] game_init: game_init_databases OK\n");
 
+    printf("\n[DEMO-DEBUG] game_init: win_set_minimized_title\n");
     win_set_minimized_title(windowTitle);
 
     VideoOptions video_options;
@@ -177,8 +188,11 @@ int game_init(const char* windowTitle, bool isMapper, int font, int flags, int a
         config_exit(&resolutionConfig);
     }
 
+    printf("\n[DEMO-DEBUG] game_init: calling initWindow\n");
     initWindow(&video_options, flags);
+    printf("\n[DEMO-DEBUG] game_init: initWindow OK, calling palette_init\n");
     palette_init();
+    printf("\n[DEMO-DEBUG] game_init: palette_init OK\n");
 
     if (!game_in_mapper) {
         game_splash_screen();
@@ -218,131 +232,183 @@ int game_init(const char* windowTitle, bool isMapper, int font, int flags, int a
     initMovie();
     debug_printf(">initMovie\t\t");
 
+    printf("\n[DEMO-DEBUG] game_init: calling gmovie_init\n");
     if (gmovie_init() != 0) {
         debug_printf("Failed on gmovie_init\n");
+        printf("\n[DEMO-DEBUG] game_init: gmovie_init FAILED\n");
         return -1;
     }
 
     debug_printf(">gmovie_init\t");
+    printf("\n[DEMO-DEBUG] game_init: gmovie_init OK\n");
 
+    printf("\n[DEMO-DEBUG] game_init: calling moviefx_init\n");
     if (moviefx_init() != 0) {
         debug_printf("Failed on moviefx_init\n");
+        printf("\n[DEMO-DEBUG] game_init: moviefx_init FAILED\n");
         return -1;
     }
 
     debug_printf(">moviefx_init\t");
+    printf("\n[DEMO-DEBUG] game_init: moviefx_init OK\n");
 
+    printf("\n[DEMO-DEBUG] game_init: calling iso_init\n");
     if (iso_init() != 0) {
         debug_printf("Failed on iso_init\n");
+        printf("\n[DEMO-DEBUG] game_init: iso_init FAILED\n");
         return -1;
     }
 
     debug_printf(">iso_init\t");
+    printf("\n[DEMO-DEBUG] game_init: iso_init OK\n");
 
+    printf("\n[DEMO-DEBUG] game_init: calling gmouse_init\n");
     if (gmouse_init() != 0) {
         debug_printf("Failed on gmouse_init\n");
+        printf("\n[DEMO-DEBUG] game_init: gmouse_init FAILED\n");
         return -1;
     }
 
     debug_printf(">gmouse_init\t");
+    printf("\n[DEMO-DEBUG] game_init: gmouse_init OK\n");
 
+    printf("\n[DEMO-DEBUG] game_init: calling proto_init\n");
     if (proto_init() != 0) {
         debug_printf("Failed on proto_init\n");
+        printf("\n[DEMO-DEBUG] game_init: proto_init FAILED\n");
         return -1;
     }
 
     debug_printf(">proto_init\t");
+    printf("\n[DEMO-DEBUG] game_init: proto_init OK\n");
 
     anim_init();
     debug_printf(">anim_init\t");
+    printf("\n[DEMO-DEBUG] game_init: anim_init OK\n");
 
+    printf("\n[DEMO-DEBUG] game_init: calling scr_init\n");
     if (scr_init() != 0) {
         debug_printf("Failed on scr_init\n");
+        printf("\n[DEMO-DEBUG] game_init: scr_init FAILED\n");
         return -1;
     }
 
     debug_printf(">scr_init\t");
+    printf("\n[DEMO-DEBUG] game_init: scr_init OK\n");
 
+    printf("\n[DEMO-DEBUG] game_init: calling game_load_info\n");
     if (game_load_info() != 0) {
         debug_printf("Failed on game_load_info\n");
+        printf("\n[DEMO-DEBUG] game_init: game_load_info FAILED\n");
         return -1;
     }
 
     debug_printf(">game_load_info\t");
+    printf("\n[DEMO-DEBUG] game_init: game_load_info OK\n");
 
+    printf("\n[DEMO-DEBUG] game_init: calling scr_game_init\n");
     if (scr_game_init() != 0) {
         debug_printf("Failed on scr_game_init\n");
+        printf("\n[DEMO-DEBUG] game_init: scr_game_init FAILED\n");
         return -1;
     }
 
     debug_printf(">scr_game_init\t");
+    printf("\n[DEMO-DEBUG] game_init: scr_game_init OK\n");
 
+    printf("\n[DEMO-DEBUG] game_init: calling init_world_map\n");
     if (init_world_map() != 0) {
         debug_printf("Failed on init_world_map\n");
+        printf("\n[DEMO-DEBUG] game_init: init_world_map FAILED\n");
         return -1;
     }
 
     debug_printf(">init_world_map\t");
+    printf("\n[DEMO-DEBUG] game_init: init_world_map OK\n");
 
     CharEditInit();
     debug_printf(">CharEditInit\t");
+    printf("\n[DEMO-DEBUG] game_init: CharEditInit OK\n");
 
     pip_init();
     debug_printf(">pip_init\t\t");
+    printf("\n[DEMO-DEBUG] game_init: pip_init OK\n");
 
     InitLoadSave();
     debug_printf(">InitLoadSave\t");
+    printf("\n[DEMO-DEBUG] game_init: InitLoadSave OK\n");
 
+    printf("\n[DEMO-DEBUG] game_init: calling gdialog_init\n");
     if (gdialog_init() != 0) {
         debug_printf("Failed on gdialog_init\n");
+        printf("\n[DEMO-DEBUG] game_init: gdialog_init FAILED\n");
         return -1;
     }
 
     debug_printf(">gdialog_init\t");
+    printf("\n[DEMO-DEBUG] game_init: gdialog_init OK\n");
 
+    printf("\n[DEMO-DEBUG] game_init: calling combat_init\n");
     if (combat_init() != 0) {
         debug_printf("Failed on combat_init\n");
+        printf("\n[DEMO-DEBUG] game_init: combat_init FAILED\n");
         return -1;
     }
 
     debug_printf(">combat_init\t");
+    printf("\n[DEMO-DEBUG] game_init: combat_init OK\n");
 
+    printf("\n[DEMO-DEBUG] game_init: calling automap_init\n");
     if (automap_init() != 0) {
         debug_printf("Failed on automap_init\n");
+        printf("\n[DEMO-DEBUG] game_init: automap_init FAILED\n");
         return -1;
     }
 
     debug_printf(">automap_init\t");
+    printf("\n[DEMO-DEBUG] game_init: automap_init OK\n");
 
+    printf("\n[DEMO-DEBUG] game_init: calling message_init\n");
     if (!message_init(&misc_message_file)) {
         debug_printf("Failed on message_init\n");
+        printf("\n[DEMO-DEBUG] game_init: message_init FAILED\n");
         return -1;
     }
 
     debug_printf(">message_init\t");
+    printf("\n[DEMO-DEBUG] game_init: message_init OK\n");
 
     snprintf(path, sizeof(path), "%s%s", msg_path, "misc.msg");
 
+    printf("\n[DEMO-DEBUG] game_init: calling message_load\n");
     if (!message_load(&misc_message_file, path)) {
         debug_printf("Failed on message_load\n");
+        printf("\n[DEMO-DEBUG] game_init: message_load FAILED\n");
         return -1;
     }
 
     debug_printf(">message_load\t");
+    printf("\n[DEMO-DEBUG] game_init: message_load OK\n");
 
+    printf("\n[DEMO-DEBUG] game_init: calling scr_disable\n");
     if (scr_disable() != 0) {
         debug_printf("Failed on scr_disable\n");
+        printf("\n[DEMO-DEBUG] game_init: scr_disable FAILED\n");
         return -1;
     }
 
     debug_printf(">scr_disable\t");
+    printf("\n[DEMO-DEBUG] game_init: scr_disable OK\n");
 
+    printf("\n[DEMO-DEBUG] game_init: calling init_options_menu\n");
     if (init_options_menu() != 0) {
         debug_printf("Failed on init_options_menu\n");
+        printf("\n[DEMO-DEBUG] game_init: init_options_menu FAILED\n");
         return -1;
     }
 
     debug_printf(">init_options_menu\n");
+    printf("\n[DEMO-DEBUG] game_init: COMPLETE — returning 0\n");
 
     return 0;
 }
@@ -1226,6 +1292,8 @@ static int game_init_databases()
     char* main_file_name;
     char* patch_file_name;
 
+    printf("\n[DEMO-DEBUG] game_init_databases: start\n");
+
     hashing = 0;
     main_file_name = NULL;
     patch_file_name = NULL;
@@ -1239,21 +1307,31 @@ static int game_init_databases()
         main_file_name = NULL;
     }
 
+    printf("\n[DEMO-DEBUG] game_init_databases: master_dat='%s'\n", main_file_name ? main_file_name : "(null)");
+
     config_get_string(&game_config, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_MASTER_PATCHES_KEY, &patch_file_name);
     if (*patch_file_name == '\0') {
         patch_file_name = NULL;
     }
 
+    printf("\n[DEMO-DEBUG] game_init_databases: master_patches='%s'\n", patch_file_name ? patch_file_name : "(null)");
+    printf("\n[DEMO-DEBUG] game_init_databases: calling db_init for master\n");
+
     master_db_handle = db_init(main_file_name, NULL, patch_file_name, 1);
     if (master_db_handle == INVALID_DATABASE_HANDLE) {
+        printf("\n[DEMO-DEBUG] game_init_databases: master db_init FAILED (INVALID_DATABASE_HANDLE)\n");
         GNWSystemError("Could not find the master datafile. Please make sure the FALLOUT CD is in the drive and that you are running FALLOUT from the directory you installed it to.");
         return -1;
     }
+
+    printf("\n[DEMO-DEBUG] game_init_databases: master db_init OK, handle=%p\n", (void*)master_db_handle);
 
     config_get_string(&game_config, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_CRITTER_DAT_KEY, &main_file_name);
     if (*main_file_name == '\0') {
         main_file_name = NULL;
     }
+
+    printf("\n[DEMO-DEBUG] game_init_databases: critter_dat='%s'\n", main_file_name ? main_file_name : "(null — skipping critter)");
 
     config_get_string(&game_config, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_CRITTER_PATCHES_KEY, &patch_file_name);
     if (*patch_file_name == '\0') {
@@ -1261,15 +1339,22 @@ static int game_init_databases()
     }
 
     if (main_file_name != NULL) {
+        printf("\n[DEMO-DEBUG] game_init_databases: calling db_init for critter\n");
         critter_db_handle = db_init(main_file_name, NULL, patch_file_name, 1);
         if (critter_db_handle == INVALID_DATABASE_HANDLE) {
+            printf("\n[DEMO-DEBUG] game_init_databases: critter db_init FAILED\n");
             db_select(master_db_handle);
             GNWSystemError("Could not find the critter datafile. Please make sure the FALLOUT CD is in the drive and that you are running FALLOUT from the directory you installed it to.");
             return -1;
         }
+        printf("\n[DEMO-DEBUG] game_init_databases: critter db_init OK\n");
+    } else {
+        printf("\n[DEMO-DEBUG] game_init_databases: critter_dat is NULL — skipping (demo mode)\n");
     }
 
     db_select(master_db_handle);
+
+    printf("\n[DEMO-DEBUG] game_init_databases: complete\n");
 
     return 0;
 }

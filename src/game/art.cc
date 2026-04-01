@@ -79,6 +79,7 @@ static int* anon_alias;
 // 0x418170
 int art_init()
 {
+    printf("[DEMO-DEBUG] art_init: entered\n");
     char path[COMPAT_MAX_PATH];
     DB_FILE* stream;
     char string[200];
@@ -110,17 +111,20 @@ int art_init()
         }
 
         if (art_read_lst(path, &(art[objectType].fileNames), &(art[objectType].fileNamesLength)) != 0) {
-            debug_printf("art_read_lst failed for %s in art_init (continuing)\n", art[objectType].dir);
+            printf("[DEMO-DEBUG] art_read_lst FAILED for type=%d dir=%s (continuing)\n", objectType, art[objectType].dir);
             art[objectType].fileNames = NULL;
             art[objectType].fileNamesLength = 0;
+        } else {
+            printf("[DEMO-DEBUG] art_read_lst OK for type=%d dir=%s count=%d\n", objectType, art[objectType].dir, art[objectType].fileNamesLength);
         }
 
-        if (objectType == OBJ_TYPE_CRITTER) {
+        if (objectType == OBJ_TYPE_CRITTER && critter_db_handle != INVALID_DATABASE_HANDLE) {
             critter_db_selected = false;
             db_select(old_db_handle);
         }
     }
 
+    printf("[DEMO-DEBUG] art_init: lst loop done. critter=%d head=%d\n", art[OBJ_TYPE_CRITTER].fileNamesLength, art[OBJ_TYPE_HEAD].fileNamesLength);
     if (art[OBJ_TYPE_CRITTER].fileNamesLength > 0) {
         anon_alias = (int*)mem_malloc(sizeof(*anon_alias) * art[OBJ_TYPE_CRITTER].fileNamesLength);
         if (anon_alias == NULL) {

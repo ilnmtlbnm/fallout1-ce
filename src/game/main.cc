@@ -88,18 +88,29 @@ static bool main_death_voiceover_done;
 // 0x4725E8
 int gnw_main(int argc, char** argv)
 {
+    printf("\n[DEMO-DEBUG] gnw_main: start\n");
+
     if (!autorun_mutex_create()) {
+        printf("\n[DEMO-DEBUG] gnw_main: autorun_mutex_create FAILED\n");
         return 1;
     }
 
+    printf("\n[DEMO-DEBUG] gnw_main: calling main_init_system\n");
     if (!main_init_system(argc, argv)) {
+        printf("\n[DEMO-DEBUG] gnw_main: main_init_system FAILED\n");
         return 1;
     }
+
+    printf("\n[DEMO-DEBUG] gnw_main: main_init_system OK\n");
+    printf("\n[DEMO-DEBUG] gnw_main: playing intro movies\n");
 
     gmovie_play(MOVIE_IPLOGO, GAME_MOVIE_FADE_IN);
     gmovie_play(MOVIE_INTRO, 0);
 
+    printf("\n[DEMO-DEBUG] gnw_main: calling main_menu_create\n");
+
     if (main_menu_create() == 0) {
+        printf("\n[DEMO-DEBUG] gnw_main: main_menu_create OK — entering menu loop\n");
         int language_filter = 1;
         bool done = false;
 
@@ -223,18 +234,26 @@ int gnw_main(int argc, char** argv)
 // 0x4728CC
 static bool main_init_system(int argc, char** argv)
 {
+    printf("\n[DEMO-DEBUG] main_init_system: calling game_init\n");
     if (game_init("FALLOUT", false, 0, 0, argc, argv) == -1) {
+        printf("\n[DEMO-DEBUG] main_init_system: game_init FAILED\n");
         return false;
     }
 
+    printf("\n[DEMO-DEBUG] main_init_system: game_init OK\n");
+
     dir_entry de;
     if (db_dir_entry("maps\\JUNKDEMO.MAP", &de) == 0) {
+        printf("\n[DEMO-DEBUG] main_init_system: found JUNKDEMO.MAP — using demo map\n");
         mainMap = "JUNKDEMO.map";
+    } else {
+        printf("\n[DEMO-DEBUG] main_init_system: JUNKDEMO.MAP not found — using default map: %s\n", mainMap);
     }
 
     // NOTE: Uninline.
     main_selfrun_init();
 
+    printf("\n[DEMO-DEBUG] main_init_system: complete\n");
     return true;
 }
 
