@@ -875,7 +875,7 @@ bool art_exists(int fid)
     bool result = false;
     DB_DATABASE* oldDb = INVALID_DATABASE_HANDLE;
 
-    if (FID_TYPE(fid) == OBJ_TYPE_CRITTER) {
+    if (FID_TYPE(fid) == OBJ_TYPE_CRITTER && critter_db_handle != NULL) {
         oldDb = db_current();
         db_select(critter_db_handle);
     }
@@ -903,7 +903,7 @@ bool art_fid_valid(int fid)
     bool result = false;
     DB_DATABASE* oldDb = INVALID_DATABASE_HANDLE;
 
-    if (FID_TYPE(fid) == OBJ_TYPE_CRITTER) {
+    if (FID_TYPE(fid) == OBJ_TYPE_CRITTER && critter_db_handle != NULL) {
         oldDb = db_current();
         db_select(critter_db_handle);
     }
@@ -959,7 +959,7 @@ int art_data_size(int fid, int* sizePtr)
     DB_DATABASE* oldDb = INVALID_DATABASE_HANDLE;
     int result = -1;
 
-    if (FID_TYPE(fid) == OBJ_TYPE_CRITTER) {
+    if (FID_TYPE(fid) == OBJ_TYPE_CRITTER && critter_db_handle != NULL) {
         oldDb = db_current();
         db_select(critter_db_handle);
     }
@@ -992,7 +992,7 @@ int art_data_load(int fid, int* sizePtr, unsigned char* data)
     DB_DATABASE* oldDb = INVALID_DATABASE_HANDLE;
     int result = -1;
 
-    if (FID_TYPE(fid) == OBJ_TYPE_CRITTER) {
+    if (FID_TYPE(fid) == OBJ_TYPE_CRITTER && critter_db_handle != NULL) {
         oldDb = db_current();
         db_select(critter_db_handle);
     }
