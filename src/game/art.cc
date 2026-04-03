@@ -125,11 +125,20 @@ int art_init()
     }
 
     printf("[DEMO-DEBUG] art_init: lst loop done. critter=%d head=%d\n", art[OBJ_TYPE_CRITTER].fileNamesLength, art[OBJ_TYPE_HEAD].fileNamesLength);
-    // Fallback: if critters.lst was missing, hardcode the demo's 10 critter types
+    // Fallback: if critters.lst was missing, inject the full Fallout 1 critter list.
+    // The demo MAP uses full-game FID indices so we need all 59 entries.
     if (art[OBJ_TYPE_CRITTER].fileNamesLength == 0) {
         static const char* demo_critters[] = {
-            "hfjmps", "hflthr", "hfmetl", "hmjmps", "hmlthr",
-            "hmmetl", "mabrom", "maddog", "nmlosr", "reserv"
+            "reserv", "hapowr", "harobe", "hfcmbt", "hfjmps", "hflthr",
+            "hfmaxx", "hfmetl", "hmbjmp", "hmbmet", "hmcmbt", "hmjmps",
+            "hmlthr", "hmmaxx", "hmmetl", "mabrom", "maddog", "mahand",
+            "malieu", "mamrat", "mamtn2", "mamtnt", "mascrp", "masphn",
+            "masrat", "mathng", "nablue", "nachld", "naghul", "naglow",
+            "napowr", "narobe", "reserv", "nfbrlp", "nfmaxx", "nfmetl",
+            "nfpeas", "nftrmp", "nfvred", "nmbpea", "nmbrlp", "nmbsnp",
+            "nmgrch", "nmlosr", "nmlthr", "nmmaxx", "nmover", "nmovr2",
+            "nmpeas", "nmgzmo", "mamstr", "maclaw", "mamant", "marobo",
+            "mafeye", "mamurt", "nabrwn", "nmdocc", "madegg",
         };
         int count = sizeof(demo_critters) / sizeof(demo_critters[0]);
         art[OBJ_TYPE_CRITTER].fileNames = (char*)mem_malloc(count * 13);
@@ -617,6 +626,8 @@ char* art_get_name(int fid)
     type = FID_TYPE(fid);
 
     if (index >= art[type].fileNamesLength) {
+        printf("[DEMO-DEBUG] art_get_name: index %d >= fileNamesLength %d for type %d (fid=0x%x)\n",
+               index, art[type].fileNamesLength, type, fid);
         return NULL;
     }
 
@@ -1002,7 +1013,13 @@ int art_data_load(int fid, int* sizePtr, unsigned char* data)
         if (load_frame_into(artFileName, data) == 0) {
             *sizePtr = artGetDataSize((Art*)data);
             result = 0;
+        } else {
+            if (FID_TYPE(fid) == OBJ_TYPE_CRITTER) {
+                printf("[DEMO-DEBUG] art_data_load: load_frame_into FAILED for critter fid=0x%x file=%s\n", fid, artFileName);
+            }
         }
+    } else if (FID_TYPE(fid) == OBJ_TYPE_CRITTER) {
+        printf("[DEMO-DEBUG] art_data_load: art_get_name returned NULL for critter fid=0x%x\n", fid);
     }
 
     if (oldDb != INVALID_DATABASE_HANDLE) {
