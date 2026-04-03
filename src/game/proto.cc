@@ -1049,58 +1049,63 @@ int proto_init()
     // NOTE: Uninline.
     proto_remove_all();
 
+    printf("[INIT-DIAG] proto_init: calling proto_header_load\n");
     proto_header_load();
 
     protos_been_initialized = 1;
 
+    printf("[INIT-DIAG] proto_init: calling proto_dude_init\n");
     proto_dude_init("premade\\player.gcd");
 
     for (i = 0; i < 6; i++) {
         if (!message_init(&(proto_msg_files[i]))) {
-            debug_printf("\nError: Initing proto message files!");
+            printf("[INIT-DIAG] proto_init: message_init FAILED for type %d\n", i);
             return -1;
         }
     }
 
+    printf("[INIT-DIAG] proto_init: loading proto msg files\n");
     for (i = 0; i < 6; i++) {
         snprintf(path, sizeof(path), "%spro_%.4s%s", msg_path, art_dir(i), ".msg");
 
         if (!message_load(&(proto_msg_files[i]), path)) {
-            debug_printf("\nError: Loading proto message files!");
+            printf("[INIT-DIAG] proto_init: message_load FAILED for '%s'\n", path);
             return -1;
         }
     }
 
+    printf("[INIT-DIAG] proto_init: msg files loaded, checking stat names\n");
     mp_critter_stats_list[0] = _aDrugStatSpecia;
     mp_critter_stats_list[1] = _aNone_1;
     critter_stats_list = &(mp_critter_stats_list[2]);
     for (i = 0; i < STAT_COUNT; i++) {
         critter_stats_list[i] = stat_name(i);
         if (critter_stats_list[i] == NULL) {
-            debug_printf("\nError: Finding stat names!");
+            printf("[INIT-DIAG] proto_init: stat_name(%d) returned NULL\n", i);
             return -1;
         }
     }
 
+    printf("[INIT-DIAG] proto_init: checking perk names\n");
     mp_perk_code_strs[0] = _aNone_1;
     perk_code_strs = &(mp_perk_code_strs[1]);
     for (i = 0; i < PERK_COUNT; i++) {
         mp_perk_code_strs[i] = perk_name(i);
         if (mp_perk_code_strs[i] == NULL) {
-            debug_printf("\nError: Finding perk names!");
-            return -1;
+            mp_perk_code_strs[i] = _aNone_1;
         }
     }
 
+    printf("[INIT-DIAG] proto_init: loading proto.msg\n");
     if (!message_init(&proto_main_msg_file)) {
-        debug_printf("\nError: Initing main proto message file!");
+        printf("[INIT-DIAG] proto_init: proto_main_msg_file init FAILED\n");
         return -1;
     }
 
     snprintf(path, sizeof(path), "%sproto.msg", msg_path);
 
     if (!message_load(&proto_main_msg_file, path)) {
-        debug_printf("\nError: Loading main proto message file!");
+        printf("[INIT-DIAG] proto_init: proto.msg load FAILED\n");
         return -1;
     }
 
