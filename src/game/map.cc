@@ -300,30 +300,29 @@ int iso_init()
         debug_printf("art_init failed in iso_init\n");
     }
 
-    debug_printf(">art_init\t\t");
+    printf("[INIT-DIAG] iso_init: art_init done\n");
 
     if (tile_init(square, SQUARE_GRID_WIDTH, SQUARE_GRID_HEIGHT, HEX_GRID_WIDTH, HEX_GRID_HEIGHT, display_buf, scr_size.lrx - scr_size.ulx + 1, scr_size.lry - scr_size.uly - 99, scr_size.lrx - scr_size.ulx + 1, map_display_draw) != 0) {
-        debug_printf("tile_init failed in iso_init\n");
+        printf("[INIT-DIAG] iso_init: tile_init FAILED\n");
         return -1;
     }
 
-    debug_printf(">tile_init\t\t");
+    printf("[INIT-DIAG] iso_init: tile_init done\n");
 
     if (obj_init(display_buf, scr_size.lrx - scr_size.ulx + 1, scr_size.lry - scr_size.uly - 99, scr_size.lrx - scr_size.ulx + 1) != 0) {
-        debug_printf("obj_init failed in iso_init\n");
+        printf("[INIT-DIAG] iso_init: obj_init FAILED\n");
         return -1;
     }
 
-    debug_printf(">obj_init\t\t");
+    printf("[INIT-DIAG] iso_init: obj_init done\n");
 
     cycle_init();
-    debug_printf(">cycle_init\t\t");
 
     tile_enable_scroll_blocking();
     tile_enable_scroll_limiting();
 
     if (intface_init() != 0) {
-        debug_printf("intface_init failed in iso_init\n");
+        printf("[INIT-DIAG] iso_init: intface_init FAILED\n");
         return -1;
     }
 

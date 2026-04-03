@@ -417,6 +417,9 @@ int intface_init()
     fid = art_id(OBJ_TYPE_INTERFACE, 16, 0, 0, 0);
     backgroundFrmData = art_ptr_lock_data(fid, 0, 0, &backgroundFrmHandle);
     if (backgroundFrmData == NULL) {
+        printf("[INIT-DIAG] intface_init: FAILED loading interface FRM index 16 (background), fid=0x%x\n", fid);
+        char* fname = art_get_name(fid);
+        printf("[INIT-DIAG]   art_get_name=%s\n", fname ? fname : "(null)");
         // NOTE: Uninline.
         return intface_fatal_error(-1);
     }
