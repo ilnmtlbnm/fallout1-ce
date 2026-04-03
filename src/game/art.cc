@@ -79,7 +79,6 @@ static int* anon_alias;
 // 0x418170
 int art_init()
 {
-    printf("[DEMO-DEBUG] art_init: entered\n");
     char path[COMPAT_MAX_PATH];
     DB_FILE* stream;
     char string[200];
@@ -111,11 +110,8 @@ int art_init()
         }
 
         if (art_read_lst(path, &(art[objectType].fileNames), &(art[objectType].fileNamesLength)) != 0) {
-            printf("[DEMO-DEBUG] art_read_lst FAILED for type=%d dir=%s (continuing)\n", objectType, art[objectType].dir);
             art[objectType].fileNames = NULL;
             art[objectType].fileNamesLength = 0;
-        } else {
-            printf("[DEMO-DEBUG] art_read_lst OK for type=%d dir=%s count=%d\n", objectType, art[objectType].dir, art[objectType].fileNamesLength);
         }
 
         if (objectType == OBJ_TYPE_CRITTER && critter_db_handle != INVALID_DATABASE_HANDLE) {
@@ -124,34 +120,6 @@ int art_init()
         }
     }
 
-    printf("[DEMO-DEBUG] art_init: lst loop done. critter=%d head=%d\n", art[OBJ_TYPE_CRITTER].fileNamesLength, art[OBJ_TYPE_HEAD].fileNamesLength);
-    // Fallback: if critters.lst was missing, inject the full Fallout 1 critter list.
-    // The demo MAP uses full-game FID indices so we need all 59 entries.
-    if (art[OBJ_TYPE_CRITTER].fileNamesLength == 0) {
-        static const char* demo_critters[] = {
-            "reserv", "hapowr", "harobe", "hfcmbt", "hfjmps", "hflthr",
-            "hfmaxx", "hfmetl", "hmbjmp", "hmbmet", "hmcmbt", "hmjmps",
-            "hmlthr", "hmmaxx", "hmmetl", "mabrom", "maddog", "mahand",
-            "malieu", "mamrat", "mamtn2", "mamtnt", "mascrp", "masphn",
-            "masrat", "mathng", "nablue", "nachld", "naghul", "naglow",
-            "napowr", "narobe", "reserv", "nfbrlp", "nfmaxx", "nfmetl",
-            "nfpeas", "nftrmp", "nfvred", "nmbpea", "nmbrlp", "nmbsnp",
-            "nmgrch", "nmlosr", "nmlthr", "nmmaxx", "nmover", "nmovr2",
-            "nmpeas", "nmgzmo", "mamstr", "maclaw", "mamant", "marobo",
-            "mafeye", "mamurt", "nabrwn", "nmdocc", "madegg",
-        };
-        int count = sizeof(demo_critters) / sizeof(demo_critters[0]);
-        art[OBJ_TYPE_CRITTER].fileNames = (char*)mem_malloc(count * 13);
-        if (art[OBJ_TYPE_CRITTER].fileNames != NULL) {
-            art[OBJ_TYPE_CRITTER].fileNamesLength = count;
-            for (int i = 0; i < count; i++) {
-                char* dest = art[OBJ_TYPE_CRITTER].fileNames + (i * 13);
-                strncpy(dest, demo_critters[i], 12);
-                dest[12] = '\0';
-            }
-            printf("[DEMO-DEBUG] art_init: injected %d critter types for demo\n", count);
-        }
-    }
     if (art[OBJ_TYPE_CRITTER].fileNamesLength > 0) {
         anon_alias = (int*)mem_malloc(sizeof(*anon_alias) * art[OBJ_TYPE_CRITTER].fileNamesLength);
         if (anon_alias == NULL) {
@@ -626,8 +594,6 @@ char* art_get_name(int fid)
     type = FID_TYPE(fid);
 
     if (index >= art[type].fileNamesLength) {
-        printf("[DEMO-DEBUG] art_get_name: index %d >= fileNamesLength %d for type %d (fid=0x%x)\n",
-               index, art[type].fileNamesLength, type, fid);
         return NULL;
     }
 
@@ -886,7 +852,7 @@ bool art_exists(int fid)
     bool result = false;
     DB_DATABASE* oldDb = INVALID_DATABASE_HANDLE;
 
-    if (FID_TYPE(fid) == OBJ_TYPE_CRITTER && critter_db_handle != NULL) {
+    if (FID_TYPE(fid) == OBJ_TYPE_CRITTER && critter_db_handle != INVALID_DATABASE_HANDLE) {
         oldDb = db_current();
         db_select(critter_db_handle);
     }
@@ -914,7 +880,7 @@ bool art_fid_valid(int fid)
     bool result = false;
     DB_DATABASE* oldDb = INVALID_DATABASE_HANDLE;
 
-    if (FID_TYPE(fid) == OBJ_TYPE_CRITTER && critter_db_handle != NULL) {
+    if (FID_TYPE(fid) == OBJ_TYPE_CRITTER && critter_db_handle != INVALID_DATABASE_HANDLE) {
         oldDb = db_current();
         db_select(critter_db_handle);
     }
@@ -970,7 +936,7 @@ int art_data_size(int fid, int* sizePtr)
     DB_DATABASE* oldDb = INVALID_DATABASE_HANDLE;
     int result = -1;
 
-    if (FID_TYPE(fid) == OBJ_TYPE_CRITTER && critter_db_handle != NULL) {
+    if (FID_TYPE(fid) == OBJ_TYPE_CRITTER && critter_db_handle != INVALID_DATABASE_HANDLE) {
         oldDb = db_current();
         db_select(critter_db_handle);
     }
@@ -1003,7 +969,7 @@ int art_data_load(int fid, int* sizePtr, unsigned char* data)
     DB_DATABASE* oldDb = INVALID_DATABASE_HANDLE;
     int result = -1;
 
-    if (FID_TYPE(fid) == OBJ_TYPE_CRITTER && critter_db_handle != NULL) {
+    if (FID_TYPE(fid) == OBJ_TYPE_CRITTER && critter_db_handle != INVALID_DATABASE_HANDLE) {
         oldDb = db_current();
         db_select(critter_db_handle);
     }
@@ -1013,13 +979,7 @@ int art_data_load(int fid, int* sizePtr, unsigned char* data)
         if (load_frame_into(artFileName, data) == 0) {
             *sizePtr = artGetDataSize((Art*)data);
             result = 0;
-        } else {
-            if (FID_TYPE(fid) == OBJ_TYPE_CRITTER) {
-                printf("[DEMO-DEBUG] art_data_load: load_frame_into FAILED for critter fid=0x%x file=%s\n", fid, artFileName);
-            }
         }
-    } else if (FID_TYPE(fid) == OBJ_TYPE_CRITTER) {
-        printf("[DEMO-DEBUG] art_data_load: art_get_name returned NULL for critter fid=0x%x\n", fid);
     }
 
     if (oldDb != INVALID_DATABASE_HANDLE) {

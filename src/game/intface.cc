@@ -393,10 +393,7 @@ int intface_init()
     CacheEntry* backgroundFrmHandle;
     unsigned char* backgroundFrmData;
 
-    printf("\n[DEMO-DEBUG] intface_init: start\n");
-
     if (interfaceWindow != -1) {
-        printf("\n[DEMO-DEBUG] intface_init: already initialized (interfaceWindow=%d)\n", interfaceWindow);
         return -1;
     }
 
@@ -405,40 +402,31 @@ int intface_init()
     int interfaceBarWindowX = (screenGetWidth() - INTERFACE_BAR_WIDTH) / 2;
     int interfaceBarWindowY = screenGetHeight() - INTERFACE_BAR_HEIGHT;
 
-    printf("\n[DEMO-DEBUG] intface_init: win_add x=%d y=%d w=%d h=%d\n", interfaceBarWindowX, interfaceBarWindowY, INTERFACE_BAR_WIDTH, INTERFACE_BAR_HEIGHT);
     interfaceWindow = win_add(interfaceBarWindowX, interfaceBarWindowY, INTERFACE_BAR_WIDTH, INTERFACE_BAR_HEIGHT, colorTable[0], WINDOW_HIDDEN);
     if (interfaceWindow == -1) {
-        printf("\n[DEMO-DEBUG] intface_init: win_add FAILED\n");
         // NOTE: Uninline.
         return intface_fatal_error(-1);
     }
 
     interfaceBuffer = win_get_buf(interfaceWindow);
     if (interfaceBuffer == NULL) {
-        printf("\n[DEMO-DEBUG] intface_init: win_get_buf FAILED\n");
         // NOTE: Uninline.
         return intface_fatal_error(-1);
     }
 
-    printf("\n[DEMO-DEBUG] intface_init: loading fid 16 (background)\n");
     fid = art_id(OBJ_TYPE_INTERFACE, 16, 0, 0, 0);
-    printf("\n[DEMO-DEBUG] intface_init: art_id(INTERFACE,16)=0x%x calling art_ptr_lock_data\n", fid);
     backgroundFrmData = art_ptr_lock_data(fid, 0, 0, &backgroundFrmHandle);
     if (backgroundFrmData == NULL) {
-        printf("\n[DEMO-DEBUG] intface_init: art_ptr_lock_data(fid=0x%x) FAILED\n", fid);
         // NOTE: Uninline.
         return intface_fatal_error(-1);
     }
 
-    printf("\n[DEMO-DEBUG] intface_init: background FRM loaded OK\n");
     buf_to_buf(backgroundFrmData, INTERFACE_BAR_WIDTH, INTERFACE_BAR_HEIGHT, INTERFACE_BAR_WIDTH, interfaceBuffer, 640);
     art_ptr_unlock(backgroundFrmHandle);
 
-    printf("\n[DEMO-DEBUG] intface_init: loading fid 47 (inventoryButtonUp)\n");
     fid = art_id(OBJ_TYPE_INTERFACE, 47, 0, 0, 0);
     inventoryButtonUp = art_ptr_lock_data(fid, 0, 0, &inventoryButtonUpKey);
     if (inventoryButtonUp == NULL) {
-        printf("\n[DEMO-DEBUG] intface_init: fid 47 FAILED\n");
         // NOTE: Uninline.
         return intface_fatal_error(-1);
     }
@@ -446,7 +434,6 @@ int intface_init()
     fid = art_id(OBJ_TYPE_INTERFACE, 46, 0, 0, 0);
     inventoryButtonDown = art_ptr_lock_data(fid, 0, 0, &inventoryButtonDownKey);
     if (inventoryButtonDown == NULL) {
-        printf("\n[DEMO-DEBUG] intface_init: fid 46 FAILED\n");
         // NOTE: Uninline.
         return intface_fatal_error(-1);
     }

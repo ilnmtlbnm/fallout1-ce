@@ -273,82 +273,61 @@ static std::vector<void*> map_local_pointers;
 // 0x4738E8
 int iso_init()
 {
-    printf("\n[DEMO-DEBUG] iso_init: start\n");
-    fflush(stdout);
     tile_disable_scroll_limiting();
     tile_disable_scroll_blocking();
 
     // NOTE: Uninline.
     square_init();
 
-    printf("\n[DEMO-DEBUG] iso_init: calling win_add screenW=%d screenH=%d\n", screenGetWidth(), screenGetHeight());
     display_win = win_add(0, 0, screenGetWidth(), screenGetHeight() - INTERFACE_BAR_HEIGHT, 256, 10);
     if (display_win == -1) {
         debug_printf("win_add failed in iso_init\n");
-        printf("\n[DEMO-DEBUG] iso_init: win_add FAILED\n");
         return -1;
     }
 
-    printf("\n[DEMO-DEBUG] iso_init: win_add OK display_win=%d\n", display_win);
     display_buf = win_get_buf(display_win);
     if (display_buf == NULL) {
         debug_printf("win_get_buf failed in iso_init\n");
-        printf("\n[DEMO-DEBUG] iso_init: win_get_buf FAILED\n");
         return -1;
     }
 
     if (win_get_rect(display_win, &map_display_rect) != 0) {
         debug_printf("win_get_rect failed in iso_init\n");
-        printf("\n[DEMO-DEBUG] iso_init: win_get_rect FAILED\n");
         return -1;
     }
 
-    printf("\n[DEMO-DEBUG] iso_init: calling art_init\n");
     if (art_init() != 0) {
         debug_printf("art_init failed in iso_init\n");
-        printf("\n[DEMO-DEBUG] iso_init: art_init FAILED (continuing anyway for demo)\n");
     }
 
     debug_printf(">art_init\t\t");
-    printf("\n[DEMO-DEBUG] iso_init: art_init OK\n");
 
-    printf("\n[DEMO-DEBUG] iso_init: calling tile_init\n");
     if (tile_init(square, SQUARE_GRID_WIDTH, SQUARE_GRID_HEIGHT, HEX_GRID_WIDTH, HEX_GRID_HEIGHT, display_buf, scr_size.lrx - scr_size.ulx + 1, scr_size.lry - scr_size.uly - 99, scr_size.lrx - scr_size.ulx + 1, map_display_draw) != 0) {
         debug_printf("tile_init failed in iso_init\n");
-        printf("\n[DEMO-DEBUG] iso_init: tile_init FAILED\n");
         return -1;
     }
 
     debug_printf(">tile_init\t\t");
-    printf("\n[DEMO-DEBUG] iso_init: tile_init OK\n");
 
-    printf("\n[DEMO-DEBUG] iso_init: calling obj_init\n");
     if (obj_init(display_buf, scr_size.lrx - scr_size.ulx + 1, scr_size.lry - scr_size.uly - 99, scr_size.lrx - scr_size.ulx + 1) != 0) {
         debug_printf("obj_init failed in iso_init\n");
-        printf("\n[DEMO-DEBUG] iso_init: obj_init FAILED\n");
         return -1;
     }
 
     debug_printf(">obj_init\t\t");
-    printf("\n[DEMO-DEBUG] iso_init: obj_init OK\n");
 
-    printf("\n[DEMO-DEBUG] iso_init: calling cycle_init\n");
     cycle_init();
     debug_printf(">cycle_init\t\t");
-    printf("\n[DEMO-DEBUG] iso_init: cycle_init OK\n");
 
     tile_enable_scroll_blocking();
     tile_enable_scroll_limiting();
 
-    printf("\n[DEMO-DEBUG] iso_init: calling intface_init\n");
     if (intface_init() != 0) {
         debug_printf("intface_init failed in iso_init\n");
-        printf("\n[DEMO-DEBUG] iso_init: intface_init FAILED\n");
         return -1;
     }
 
     debug_printf(">intface_init\t\t");
-    printf("\n[DEMO-DEBUG] iso_init: intface_init OK\n");
 
     map_setup_paths();
 
