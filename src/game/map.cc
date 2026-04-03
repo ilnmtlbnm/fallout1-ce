@@ -940,7 +940,7 @@ int map_load_file(DB_FILE* stream)
         if (map_read_MapData(&map_data, stream) != 0) break;
 
         error = "Invalid map version";
-        if (map_data.version != 19) break;
+        if (map_data.version != 16 && map_data.version != 19 && map_data.version != 20) break;
 
         obj_remove_all();
 
