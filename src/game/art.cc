@@ -120,7 +120,9 @@ int art_init()
         }
     }
 
-    printf("[CRITTER-DIAG] art_init: critter fileNamesLength=%d\n", art[OBJ_TYPE_CRITTER].fileNamesLength);
+    for (int t = 0; t < OBJ_TYPE_COUNT; t++) {
+        printf("[ART-DIAG] art_init: type=%d dir=%s fileNamesLength=%d\n", t, art[t].dir, art[t].fileNamesLength);
+    }
 
     if (art[OBJ_TYPE_CRITTER].fileNamesLength > 0) {
         anon_alias = (int*)mem_malloc(sizeof(*anon_alias) * art[OBJ_TYPE_CRITTER].fileNamesLength);
@@ -958,13 +960,24 @@ int art_data_size(int fid, int* sizePtr)
         }
     }
 
-    if (FID_TYPE(fid) == OBJ_TYPE_CRITTER && result != 0) {
-        static int critter_size_fail = 0;
-        if (critter_size_fail < 3) {
-            critter_size_fail++;
+    if (result != 0) {
+        static int any_size_fail = 0;
+        if (any_size_fail < 5) {
+            any_size_fail++;
             char* name = art_get_name(fid);
-            printf("[CRITTER-DIAG] art_data_size FAIL #%d: fid=0x%x path=%s db=%p\n",
-                   critter_size_fail, fid, name ? name : "(null)", (void*)db_current());
+            DB_FILE* probe = (name != NULL) ? db_fopen(name, "rb") : NULL;
+            printf("[ART-DIAG] art_data_size FAIL #%d: fid=0x%x type=%d path=%s db_fopen=%s\n",
+                   any_size_fail, fid, FID_TYPE(fid), name ? name : "(null)", probe ? "OK" : "NULL");
+            if (probe != NULL) db_fclose(probe);
+        }
+        if (FID_TYPE(fid) == OBJ_TYPE_CRITTER) {
+            static int critter_size_fail = 0;
+            if (critter_size_fail < 3) {
+                critter_size_fail++;
+                char* name = art_get_name(fid);
+                printf("[CRITTER-DIAG] art_data_size FAIL #%d: fid=0x%x path=%s db=%p\n",
+                       critter_size_fail, fid, name ? name : "(null)", (void*)db_current());
+            }
         }
     }
 

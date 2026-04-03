@@ -625,6 +625,13 @@ DB_FILE* db_fopen(const char* filename, const char* mode)
     compat_strupr(path);
 
     if (db_find_dir_entry(path, &de) == -1) {
+        static int dat_miss = 0;
+        if (dat_miss < 50) {
+            dat_miss++;
+            printf("[DB-DIAG] db_find_dir_entry MISS #%d: path=%s datafile=%s\n",
+                   dat_miss, path,
+                   (current_database->datafile != NULL) ? current_database->datafile : "(null)");
+        }
         return NULL;
     }
 

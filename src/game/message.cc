@@ -191,6 +191,11 @@ bool message_load(MessageList* messageList, const char* path)
 
     file_ptr = db_fopen(localized_path, "rt");
     if (file_ptr == NULL) {
+        // Fallback: try without language prefix (demo compatibility)
+        snprintf(localized_path, sizeof(localized_path), "%s\\%s", "text", path);
+        file_ptr = db_fopen(localized_path, "rt");
+    }
+    if (file_ptr == NULL) {
         return false;
     }
 
