@@ -120,6 +120,8 @@ int art_init()
         }
     }
 
+    printf("[CRITTER-DIAG] art_init: critter fileNamesLength=%d\n", art[OBJ_TYPE_CRITTER].fileNamesLength);
+
     if (art[OBJ_TYPE_CRITTER].fileNamesLength > 0) {
         anon_alias = (int*)mem_malloc(sizeof(*anon_alias) * art[OBJ_TYPE_CRITTER].fileNamesLength);
         if (anon_alias == NULL) {
@@ -956,6 +958,16 @@ int art_data_size(int fid, int* sizePtr)
         }
     }
 
+    if (FID_TYPE(fid) == OBJ_TYPE_CRITTER && result != 0) {
+        static int critter_size_fail = 0;
+        if (critter_size_fail < 3) {
+            critter_size_fail++;
+            char* name = art_get_name(fid);
+            printf("[CRITTER-DIAG] art_data_size FAIL #%d: fid=0x%x path=%s db=%p\n",
+                   critter_size_fail, fid, name ? name : "(null)", (void*)db_current());
+        }
+    }
+
     if (oldDb != INVALID_DATABASE_HANDLE) {
         db_select(oldDb);
     }
@@ -979,6 +991,16 @@ int art_data_load(int fid, int* sizePtr, unsigned char* data)
         if (load_frame_into(artFileName, data) == 0) {
             *sizePtr = artGetDataSize((Art*)data);
             result = 0;
+        }
+    }
+
+    if (FID_TYPE(fid) == OBJ_TYPE_CRITTER && result != 0) {
+        static int critter_fail_count = 0;
+        if (critter_fail_count < 3) {
+            critter_fail_count++;
+            char* name = art_get_name(fid);
+            printf("[CRITTER-DIAG] art_data_load FAIL #%d: fid=0x%x path=%s db=%p\n",
+                   critter_fail_count, fid, name ? name : "(null)", (void*)db_current());
         }
     }
 
