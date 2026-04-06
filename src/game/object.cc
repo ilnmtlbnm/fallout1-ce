@@ -471,6 +471,8 @@ static int obj_load_func(DB_FILE* stream)
         return -1;
     }
 
+    printf("[OBJ-DIAG] total objects to load: %d, map version: %d\n", objectCount, map_data.version);
+
     if (preload_list != NULL) {
         mem_free(preload_list);
     }
@@ -510,6 +512,7 @@ static int obj_load_func(DB_FILE* stream)
                 // NOTE: Uninline.
                 obj_destroy_object_node(&objectListNode);
 
+                printf("[OBJ-DIAG] obj_read_obj FAILED at object index %d\n", objectIndex);
                 return -1;
             }
 
@@ -531,6 +534,11 @@ static int obj_load_func(DB_FILE* stream)
             objectListNode->obj->elevation = elevation;
 
             obj_insert(objectListNode);
+
+            if (objectIndex < 5 || objectIndex == objectCountAtElevation - 1) {
+                printf("[OBJ-DIAG] obj[%d] loaded: tile=%d fid=0x%x pid=0x%x elev=%d\n",
+                    objectIndex, objectListNode->obj->tile, objectListNode->obj->fid, objectListNode->obj->pid, objectListNode->obj->elevation);
+            }
 
             if ((objectListNode->obj->flags & OBJECT_NO_REMOVE) && PID_TYPE(objectListNode->obj->pid) == OBJ_TYPE_CRITTER && objectListNode->obj->pid != 18000) {
                 objectListNode->obj->flags &= ~OBJECT_NO_REMOVE;

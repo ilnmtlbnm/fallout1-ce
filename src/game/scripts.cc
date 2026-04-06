@@ -1772,18 +1772,35 @@ int scr_save(DB_FILE* stream)
 static int scr_read_ScriptSubNode(Script* scr, DB_FILE* stream)
 {
     int prg;
+    int dummy;
 
     if (db_freadInt(stream, &(scr->scr_id)) == -1) return -1;
     if (db_freadInt(stream, &(scr->scr_next)) == -1) return -1;
 
-    switch (SID_TYPE(scr->scr_id)) {
-    case SCRIPT_TYPE_SPATIAL:
-        if (db_freadInt(stream, &(scr->sp.built_tile)) == -1) return -1;
-        if (db_freadInt(stream, &(scr->sp.radius)) == -1) return -1;
-        break;
-    case SCRIPT_TYPE_TIMED:
-        if (db_freadInt(stream, &(scr->tm.time)) == -1) return -1;
-        break;
+    if (map_data.version < 19) {
+        // v16: all scripts have 2 type-specific slots at fixed positions
+        int slot2, slot3;
+        if (db_freadInt(stream, &slot2) == -1) return -1;
+        if (db_freadInt(stream, &slot3) == -1) return -1;
+        switch (SID_TYPE(scr->scr_id)) {
+        case SCRIPT_TYPE_SPATIAL:
+            scr->sp.built_tile = slot2;
+            scr->sp.radius = slot3;
+            break;
+        case SCRIPT_TYPE_TIMED:
+            scr->tm.time = slot2;
+            break;
+        }
+    } else {
+        switch (SID_TYPE(scr->scr_id)) {
+        case SCRIPT_TYPE_SPATIAL:
+            if (db_freadInt(stream, &(scr->sp.built_tile)) == -1) return -1;
+            if (db_freadInt(stream, &(scr->sp.radius)) == -1) return -1;
+            break;
+        case SCRIPT_TYPE_TIMED:
+            if (db_freadInt(stream, &(scr->tm.time)) == -1) return -1;
+            break;
+        }
     }
 
     if (db_freadInt(stream, &(scr->scr_flags)) == -1) return -1;
@@ -1800,6 +1817,12 @@ static int scr_read_ScriptSubNode(Script* scr, DB_FILE* stream)
     if (db_freadInt(stream, &(scr->field_48)) == -1) return -1;
     if (db_freadInt(stream, &(scr->howMuch)) == -1) return -1;
     if (db_freadInt(stream, &(scr->run_info_flags)) == -1) return -1;
+
+    if (map_data.version < 19) {
+        for (int i = 0; i < 8; i++) {
+            if (db_freadInt(stream, &dummy) == -1) return -1;
+        }
+    }
 
     scr->program = NULL;
     scr->owner = NULL;
