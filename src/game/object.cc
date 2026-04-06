@@ -4457,6 +4457,10 @@ static void obj_render_outline(Object* object, Rect* rect)
         v49.lry = v49.uly + (objectRect.lry - objectRect.uly);
 
         unsigned char* src = art_frame_data(art, object->frame, object->rotation);
+        if (src == NULL) {
+            art_ptr_unlock(cacheEntry);
+            return;
+        }
 
         unsigned char* dest = back_buf + buf_full * object->sy + object->sx;
         int destStep = buf_full - frameWidth;
@@ -4686,6 +4690,10 @@ static void obj_render_object(Object* object, Rect* rect, int light)
     }
 
     unsigned char* src = art_frame_data(art, object->frame, object->rotation);
+    if (src == NULL) {
+        art_ptr_unlock(cacheEntry);
+        return;
+    }
     unsigned char* src2 = src;
     int v50 = objectRect.ulx - object->sx;
     int v49 = objectRect.uly - object->sy;
