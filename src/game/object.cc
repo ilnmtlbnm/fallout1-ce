@@ -412,7 +412,11 @@ static int obj_read_obj(Object* obj, DB_FILE* stream)
     if (db_freadInt(stream, &(obj->lightIntensity)) == -1) return -1;
     if (db_freadInt(stream, &field_74) == -1) return -1;
     if (db_freadInt(stream, &(obj->sid)) == -1) return -1;
-    if (db_freadInt(stream, &(obj->field_80)) == -1) return -1;
+    if (map_data.version >= 19) {
+        if (db_freadInt(stream, &(obj->field_80)) == -1) return -1;
+    } else {
+        obj->field_80 = 0;
+    }
 
     obj->outline = 0;
     obj->owner = NULL;
@@ -664,7 +668,9 @@ static int obj_write_obj(Object* obj, DB_FILE* stream)
     if (db_fwriteInt(stream, obj->lightIntensity) == -1) return -1;
     if (db_fwriteInt(stream, obj->outline) == -1) return -1;
     if (db_fwriteInt(stream, obj->sid) == -1) return -1;
-    if (db_fwriteInt(stream, obj->field_80) == -1) return -1;
+    if (map_data.version >= 19) {
+        if (db_fwriteInt(stream, obj->field_80) == -1) return -1;
+    }
     if (proto_write_protoUpdateData(obj, stream) == -1) return -1;
 
     return 0;
