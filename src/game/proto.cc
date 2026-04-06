@@ -1671,6 +1671,12 @@ int proto_load_pid(int pid, Proto** protoPtr)
     }
 
     if (proto_read_protoSubNode(*protoPtr, stream) != 0) {
+        if (map_data.version < 19) {
+            // v16 demo .PRO files have fewer fields per type —
+            // treat partial reads as success with defaults for missing fields
+            db_fclose(stream);
+            return 0;
+        }
         db_fclose(stream);
         return -1;
     }
