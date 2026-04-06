@@ -204,6 +204,9 @@ int proto_list_str(int pid, char* proto_path)
     strcat(path, ".lst");
 
     DB_FILE* stream = db_fopen(path, "rt");
+    if (stream == NULL) {
+        printf("[PROTO-DIAG] proto_list_str: db_fopen FAILED path='%s' pid=0x%x\n", path, pid);
+    }
 
     int i = 1;
     char string[256];
@@ -218,6 +221,7 @@ int proto_list_str(int pid, char* proto_path)
     db_fclose(stream);
 
     if (i != (pid & 0xFFFFFF)) {
+        printf("[PROTO-DIAG] proto_list_str: line not found i=%d target=%d path='%s'\n", i, pid & 0xFFFFFF, path);
         return -1;
     }
 
@@ -439,6 +443,8 @@ int proto_read_protoUpdateData(Object* obj, DB_FILE* stream)
     Proto* proto;
     int temp;
 
+    printf("[PROTO-DIAG] pid=0x%x type=%d\n", obj->pid, PID_TYPE(obj->pid));
+
     Inventory* inventory = &(obj->data.inventory);
     if (db_freadInt32(stream, &(inventory->length)) == -1) return -1;
     if (db_freadInt32(stream, &(inventory->capacity)) == -1) return -1;
@@ -461,7 +467,10 @@ int proto_read_protoUpdateData(Object* obj, DB_FILE* stream)
 
         switch (PID_TYPE(obj->pid)) {
         case OBJ_TYPE_ITEM:
-            if (proto_ptr(obj->pid, &proto) == -1) return -1;
+            if (proto_ptr(obj->pid, &proto) == -1) {
+                printf("[PROTO-DIAG] proto_ptr FAILED pid=0x%x\n", obj->pid);
+                return -1;
+            }
 
             switch (proto->item.type) {
             case ITEM_TYPE_WEAPON:
@@ -483,7 +492,10 @@ int proto_read_protoUpdateData(Object* obj, DB_FILE* stream)
 
             break;
         case OBJ_TYPE_SCENERY:
-            if (proto_ptr(obj->pid, &proto) == -1) return -1;
+            if (proto_ptr(obj->pid, &proto) == -1) {
+                printf("[PROTO-DIAG] proto_ptr FAILED pid=0x%x\n", obj->pid);
+                return -1;
+            }
 
             switch (proto->scenery.type) {
             case SCENERY_TYPE_DOOR:
@@ -1362,7 +1374,11 @@ static int proto_read_protoSubNode(Proto* proto, DB_FILE* stream)
         if (db_freadInt32(stream, &(proto->item.weight)) == -1) return -1;
         if (db_freadInt32(stream, &(proto->item.cost)) == -1) return -1;
         if (db_freadInt32(stream, &(proto->item.inventoryFid)) == -1) return -1;
-        if (db_freadByte(stream, &(proto->item.field_80)) == -1) return -1;
+        if (map_data.version >= 19) {
+            if (db_freadByte(stream, &(proto->item.field_80)) == -1) return -1;
+        } else {
+            proto->item.field_80 = 0;
+        }
         if (proto_read_item_data(&(proto->item.data), proto->item.type, stream) == -1) return -1;
 
         return 0;
@@ -1387,7 +1403,11 @@ static int proto_read_protoSubNode(Proto* proto, DB_FILE* stream)
         if (db_freadInt32(stream, &(proto->scenery.sid)) == -1) return -1;
         if (db_freadInt32(stream, &(proto->scenery.type)) == -1) return -1;
         if (db_freadInt32(stream, &(proto->scenery.material)) == -1) return -1;
-        if (db_freadByte(stream, &(proto->scenery.field_34)) == -1) return -1;
+        if (map_data.version >= 19) {
+            if (db_freadByte(stream, &(proto->scenery.field_34)) == -1) return -1;
+        } else {
+            proto->scenery.field_34 = 0;
+        }
         if (proto_read_scenery_data(&(proto->scenery.data), proto->scenery.type, stream) == -1) return -1;
         return 0;
     case OBJ_TYPE_WALL:
@@ -1640,7 +1660,7 @@ int proto_load_pid(int pid, Proto** protoPtr)
 
     DB_FILE* stream = db_fopen(path, "rb");
     if (stream == NULL) {
-        debug_printf("\nError: Can't fopen proto!\n");
+        printf("[PROTO-DIAG] proto_load_pid: db_fopen FAILED path='%s' pid=0x%x\n", path, pid);
         *protoPtr = NULL;
         return -1;
     }
