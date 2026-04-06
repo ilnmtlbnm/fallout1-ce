@@ -955,8 +955,13 @@ int critter_read_data(DB_FILE* stream, CritterProtoData* critterData)
     if (db_freadIntCount(stream, critterData->bonusStats, SAVEABLE_STAT_COUNT) == -1) return -1;
     if (db_freadIntCount(stream, critterData->skills, SKILL_COUNT) == -1) return -1;
     if (db_freadInt(stream, &(critterData->bodyType)) == -1) return -1;
-    if (db_freadInt(stream, &(critterData->experience)) == -1) return -1;
-    if (db_freadInt(stream, &(critterData->killType)) == -1) return -1;
+    if (map_data.version >= 19) {
+        if (db_freadInt(stream, &(critterData->experience)) == -1) return -1;
+        if (db_freadInt(stream, &(critterData->killType)) == -1) return -1;
+    } else {
+        critterData->experience = 0;
+        critterData->killType = 0;
+    }
 
     return 0;
 }
