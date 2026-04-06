@@ -1859,6 +1859,12 @@ static int scr_read_ScriptNode(ScriptListExtent* scriptExtent, DB_FILE* stream)
         return -1;
     }
 
+    if (map_data.version < 19) {
+        int dummy;
+        if (db_freadInt(stream, &dummy) == -1) return -1;
+        if (db_freadInt(stream, &dummy) == -1) return -1;
+    }
+
     return 0;
 }
 
