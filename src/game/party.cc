@@ -273,6 +273,8 @@ int partyMemberPrepLoad()
                 }
 
                 memcpy(partyMember->vars, map_local_vars + script->scr_local_var_offset, sizeof(int) * script->scr_num_local_vars);
+            } else {
+                partyMember->vars = NULL;
             }
 
             // NOTE: Uninline.
@@ -336,6 +338,8 @@ int partyMemberRecoverLoad()
             if (partyMember->vars != NULL) {
                 script->scr_local_var_offset = map_malloc_local_var(script->scr_num_local_vars);
                 memcpy(map_local_vars + script->scr_local_var_offset, partyMember->vars, sizeof(int) * script->scr_num_local_vars);
+                mem_free(partyMember->vars);
+                partyMember->vars = NULL;
             }
 
             debug_printf("[Party Member %d]: %s\n", index, critter_name(partyMember->object));
