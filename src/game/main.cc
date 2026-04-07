@@ -100,7 +100,6 @@ int gnw_main(int argc, char** argv)
     gmovie_play(MOVIE_IPLOGO, GAME_MOVIE_FADE_IN);
     gmovie_play(MOVIE_INTRO, 0);
 
-    printf("[INIT-DIAG] gnw_main: calling main_menu_create\n"); fflush(stdout);
     if (main_menu_create() == 0) {
         int language_filter = 1;
         bool done = false;
@@ -127,9 +126,7 @@ int gnw_main(int argc, char** argv)
                 if (select_character() == 2) {
                     gmovie_play(MOVIE_OVRINTRO, GAME_MOVIE_STOP_MUSIC);
                     roll_set_seed(-1);
-                    printf("[INIT-DIAG] gnw_main: loading map '%s'\n", mainMap); fflush(stdout);
                     main_load_new(mainMap);
-                    printf("[INIT-DIAG] gnw_main: map load returned, entering game loop\n"); fflush(stdout);
                     main_game_loop();
                     palette_fade_to(white_palette);
 
@@ -204,7 +201,6 @@ int gnw_main(int argc, char** argv)
                 break;
             case MAIN_MENU_EXIT:
             case -1:
-                printf("[INIT-DIAG] gnw_main: exiting (mainMenuRc=%d)\n", mainMenuRc); fflush(stdout);
                 done = true;
                 main_menu_hide(true);
                 main_menu_destroy();

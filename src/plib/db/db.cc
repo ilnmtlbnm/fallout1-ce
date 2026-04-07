@@ -625,13 +625,6 @@ DB_FILE* db_fopen(const char* filename, const char* mode)
     compat_strupr(path);
 
     if (db_find_dir_entry(path, &de) == -1) {
-        static int dat_miss = 0;
-        if (dat_miss < 50) {
-            dat_miss++;
-            printf("[DB-DIAG] db_find_dir_entry MISS #%d: path=%s datafile=%s\n",
-                   dat_miss, path,
-                   (current_database->datafile != NULL) ? current_database->datafile : "(null)");
-        }
         return NULL;
     }
 
@@ -1970,12 +1963,6 @@ static int db_init_database(DB_DATABASE* database, const char* datafile, const c
         return -1;
     }
 
-    printf("[CRITTER-DIAG] db_init_database('%s'): root.size=%d root.max=%d root.datasize=%d ftell=%ld\n",
-           datafile, database->root.size, database->root.max, database->root.datasize, ftell(database->stream));
-    if (database->root.size > 0) {
-        printf("[CRITTER-DIAG]   first dir name='%s'\n", database->root.list[0].name);
-    }
-
     database->entries = (assoc_array*)internal_malloc(sizeof(*database->entries) * database->root.size);
     if (database->entries == NULL) {
         assoc_free(&(database->root));
@@ -2552,14 +2539,6 @@ static int db_find_dir_entry(char* path, dir_entry* de)
         if (pos >= 0) {
             normalized_path[pos] = '\\';
         }
-        {
-            static int dir_fail_count = 0;
-            if (dir_fail_count < 3 && (strstr(path, "CRITTER") != NULL || strstr(path, "critter") != NULL)) {
-                dir_fail_count++;
-                printf("[CRITTER-DIAG] db_find_dir_entry: dir NOT FOUND for path='%s' root.size=%d\n",
-                       path, current_database->root.size);
-            }
-        }
         return -1;
     }
 
@@ -2567,13 +2546,6 @@ static int db_find_dir_entry(char* path, dir_entry* de)
     if (entry_index == -1) {
         if (pos >= 0) {
             normalized_path[pos] = '\\';
-        }
-        {
-            static int entry_fail_count = 0;
-            if (entry_fail_count < 3 && (strstr(path, "CRITTER") != NULL || strstr(path, "critter") != NULL)) {
-                entry_fail_count++;
-                printf("[CRITTER-DIAG] db_find_dir_entry: entry NOT FOUND for path='%s'\n", path);
-            }
         }
         return -1;
     }

@@ -300,21 +300,13 @@ int iso_init()
         debug_printf("art_init failed in iso_init\n");
     }
 
-    printf("[INIT-DIAG] iso_init: art_init done\n");
-
     if (tile_init(square, SQUARE_GRID_WIDTH, SQUARE_GRID_HEIGHT, HEX_GRID_WIDTH, HEX_GRID_HEIGHT, display_buf, scr_size.lrx - scr_size.ulx + 1, scr_size.lry - scr_size.uly - 99, scr_size.lrx - scr_size.ulx + 1, map_display_draw) != 0) {
-        printf("[INIT-DIAG] iso_init: tile_init FAILED\n");
         return -1;
     }
-
-    printf("[INIT-DIAG] iso_init: tile_init done\n");
 
     if (obj_init(display_buf, scr_size.lrx - scr_size.ulx + 1, scr_size.lry - scr_size.uly - 99, scr_size.lrx - scr_size.ulx + 1) != 0) {
-        printf("[INIT-DIAG] iso_init: obj_init FAILED\n");
         return -1;
     }
-
-    printf("[INIT-DIAG] iso_init: obj_init done\n");
 
     cycle_init();
 
@@ -322,7 +314,6 @@ int iso_init()
     tile_enable_scroll_limiting();
 
     if (intface_init() != 0) {
-        printf("[INIT-DIAG] iso_init: intface_init FAILED\n");
         return -1;
     }
 
@@ -980,22 +971,14 @@ int map_load_file(DB_FILE* stream)
         }
 
         error = "Error setting map elevation";
-        printf("[MAP-DIAG] enteringElev=%d enteringTile=%d enteringRot=%d flags=0x%x globalVars=%d localVars=%d\n",
-               map_data.enteringElevation, map_data.enteringTile, map_data.enteringRotation,
-               map_data.flags, map_data.globalVariablesCount, map_data.localVariablesCount);
         if (map_set_elevation(map_data.enteringElevation) != 0) break;
 
         error = "Error setting tile center";
         if (tile_set_center(map_data.enteringTile, TILE_SET_CENTER_FLAG_IGNORE_SCROLL_RESTRICTIONS) != 0) break;
 
-        printf("[MAP-DIAG] map loaded OK: elevation=%d centerTile=%d\n", map_elevation, tile_center_tile);
-        printf("[MAP-DIAG] calling light_set_ambient\n");
         light_set_ambient(LIGHT_LEVEL_MAX, false);
-        printf("[MAP-DIAG] calling obj_move_to_tile\n");
         obj_move_to_tile(obj_dude, tile_center_tile, map_elevation, NULL);
-        printf("[MAP-DIAG] calling obj_set_rotation\n");
         obj_set_rotation(obj_dude, map_data.enteringRotation, NULL);
-        printf("[MAP-DIAG] calling map_match_map_number\n");
         map_match_map_number();
 
         if ((map_data.flags & 1) == 0) {
@@ -1016,9 +999,7 @@ int map_load_file(DB_FILE* stream)
             map_data.globalVariablesCount = num_map_global_vars;
         }
 
-        printf("[MAP-DIAG] calling scr_enable\n");
         scr_enable();
-        printf("[MAP-DIAG] scr_enable done, scriptIndex=%d\n", map_data.scriptIndex);
 
         if (map_data.scriptIndex > 0) {
             error = "Error creating new map script";
@@ -1054,35 +1035,24 @@ int map_load_file(DB_FILE* stream)
         map_new_map();
         rc = -1;
     } else {
-        printf("[MAP-DIAG] calling obj_preload_art_cache\n");
         obj_preload_art_cache(map_data.flags);
-        printf("[MAP-DIAG] obj_preload_art_cache done\n");
     }
 
-    printf("[MAP-DIAG] calling partyMemberRecoverLoad\n");
     partyMemberRecoverLoad();
-    printf("[MAP-DIAG] calling intface_show\n");
     intface_show();
-    printf("[MAP-DIAG] calling map_place_dude_and_mouse\n");
     map_place_dude_and_mouse();
-    printf("[MAP-DIAG] calling map_enable_bk_processes\n");
     map_enable_bk_processes();
     gmouse_disable_scrolling();
     gmouse_set_cursor(MOUSE_CURSOR_WAIT_PLANET);
 
-    printf("[MAP-DIAG] calling scr_load_all_scripts\n");
     if (scr_load_all_scripts() == -1) {
         debug_printf("\n   Error: scr_load_all_scripts failed!");
     }
 
-    printf("[MAP-DIAG] calling scr_exec_map_enter_scripts\n");
     scr_exec_map_enter_scripts();
-    printf("[MAP-DIAG] calling scr_exec_map_update_scripts\n");
     scr_exec_map_update_scripts();
-    printf("[MAP-DIAG] enabling tile refresh\n");
     tile_enable_refresh();
     tile_refresh_display();
-    printf("[MAP-DIAG] tile refresh enabled + display refreshed\n");
 
     if (map_state.map > 0) {
         if (map_state.rotation >= 0) {
@@ -1816,18 +1786,8 @@ static int square_load(DB_FILE* stream, int flags)
     for (int elevation = 0; elevation < ELEVATION_COUNT; elevation++) {
         if ((flags & map_data_elev_flags[elevation]) == 0) {
             int* arr = square[elevation]->field_0;
-            printf("[MAP-DIAG] square_load: elev=%d BEFORE fread: first=[%08x %08x %08x %08x] streamPos=%ld\n",
-                   elevation, arr[0], arr[1], arr[2], arr[3], db_ftell(stream));
             if (db_freadInt32List(stream, arr, SQUARE_GRID_SIZE) != 0) {
-                printf("[MAP-DIAG] square_load: freadInt32List FAILED for elev %d\n", elevation);
                 return -1;
-            }
-
-            {
-                int changed = 0;
-                for (int k = 0; k < 100; k++) { if (arr[k] != 0x00010001) changed++; }
-                printf("[MAP-DIAG] square_load: elev=%d AFTER fread: first=[%08x %08x %08x %08x] changed=%d/100 streamPos=%ld\n",
-                       elevation, arr[0], arr[1], arr[2], arr[3], changed, db_ftell(stream));
             }
 
             for (int tile = 0; tile < SQUARE_GRID_SIZE; tile++) {

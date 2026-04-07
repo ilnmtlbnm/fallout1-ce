@@ -269,7 +269,6 @@ static IndicatorDescription bbox[INDICATOR_COUNT] = {
 
 // 0x50560C
 int interfaceWindow = -1;
-static int intface_diag_step = 0;
 
 // 0x505610
 int bar_window = -1;
@@ -394,9 +393,7 @@ int intface_init()
     CacheEntry* backgroundFrmHandle;
     unsigned char* backgroundFrmData;
 
-    printf("[INIT-DIAG] intface_init: entered, interfaceWindow=%d\n", interfaceWindow);
     if (interfaceWindow != -1) {
-        printf("[INIT-DIAG] intface_init: already initialized, returning -1\n");
         return -1;
     }
 
@@ -406,28 +403,22 @@ int intface_init()
     int interfaceBarWindowY = screenGetHeight() - INTERFACE_BAR_HEIGHT;
 
     interfaceWindow = win_add(interfaceBarWindowX, interfaceBarWindowY, INTERFACE_BAR_WIDTH, INTERFACE_BAR_HEIGHT, colorTable[0], WINDOW_HIDDEN);
-    printf("[INIT-DIAG] intface_init: win_add=%d\n", interfaceWindow);
     if (interfaceWindow == -1) {
-        printf("[INIT-DIAG] intface_init: win_add FAILED\n");
-        intface_diag_step++; return intface_fatal_error(-1);
+        // NOTE: Uninline.
+        return intface_fatal_error(-1);
     }
 
     interfaceBuffer = win_get_buf(interfaceWindow);
     if (interfaceBuffer == NULL) {
-        printf("[INIT-DIAG] intface_init: win_get_buf FAILED\n");
-        intface_diag_step++; return intface_fatal_error(-1);
+        // NOTE: Uninline.
+        return intface_fatal_error(-1);
     }
 
-    printf("[INIT-DIAG] intface_init: window OK, loading FRMs...\n");
-    intface_diag_step = 1;
     fid = art_id(OBJ_TYPE_INTERFACE, 16, 0, 0, 0);
     backgroundFrmData = art_ptr_lock_data(fid, 0, 0, &backgroundFrmHandle);
     if (backgroundFrmData == NULL) {
-        printf("[INIT-DIAG] intface_init: FAILED loading interface FRM index 16 (background), fid=0x%x\n", fid);
-        char* fname = art_get_name(fid);
-        printf("[INIT-DIAG]   art_get_name=%s\n", fname ? fname : "(null)");
         // NOTE: Uninline.
-        intface_diag_step++; return intface_fatal_error(-1);
+        return intface_fatal_error(-1);
     }
 
     buf_to_buf(backgroundFrmData, INTERFACE_BAR_WIDTH, INTERFACE_BAR_HEIGHT, INTERFACE_BAR_WIDTH, interfaceBuffer, 640);
@@ -437,20 +428,20 @@ int intface_init()
     inventoryButtonUp = art_ptr_lock_data(fid, 0, 0, &inventoryButtonUpKey);
     if (inventoryButtonUp == NULL) {
         // NOTE: Uninline.
-        intface_diag_step++; return intface_fatal_error(-1);
+        return intface_fatal_error(-1);
     }
 
     fid = art_id(OBJ_TYPE_INTERFACE, 46, 0, 0, 0);
     inventoryButtonDown = art_ptr_lock_data(fid, 0, 0, &inventoryButtonDownKey);
     if (inventoryButtonDown == NULL) {
         // NOTE: Uninline.
-        intface_diag_step++; return intface_fatal_error(-1);
+        return intface_fatal_error(-1);
     }
 
     inventoryButton = win_register_button(interfaceWindow, 211, 41, 32, 21, -1, -1, -1, KEY_LOWERCASE_I, inventoryButtonUp, inventoryButtonDown, NULL, 0);
     if (inventoryButton == -1) {
         // NOTE: Uninline.
-        intface_diag_step++; return intface_fatal_error(-1);
+        return intface_fatal_error(-1);
     }
 
     win_register_button_sound_func(inventoryButton, gsound_med_butt_press, gsound_med_butt_release);
@@ -459,20 +450,20 @@ int intface_init()
     optionsButtonUp = art_ptr_lock_data(fid, 0, 0, &optionsButtonUpKey);
     if (optionsButtonUp == NULL) {
         // NOTE: Uninline.
-        intface_diag_step++; return intface_fatal_error(-1);
+        return intface_fatal_error(-1);
     }
 
     fid = art_id(OBJ_TYPE_INTERFACE, 17, 0, 0, 0);
     optionsButtonDown = art_ptr_lock_data(fid, 0, 0, &optionsButtonDownKey);
     if (optionsButtonDown == NULL) {
         // NOTE: Uninline.
-        intface_diag_step++; return intface_fatal_error(-1);
+        return intface_fatal_error(-1);
     }
 
     optionsButton = win_register_button(interfaceWindow, 210, 62, 34, 34, -1, -1, -1, KEY_LOWERCASE_O, optionsButtonUp, optionsButtonDown, NULL, 0);
     if (optionsButton == -1) {
         // NOTE: Uninline.
-        intface_diag_step++; return intface_fatal_error(-1);
+        return intface_fatal_error(-1);
     }
 
     win_register_button_sound_func(optionsButton, gsound_med_butt_press, gsound_med_butt_release);
@@ -481,27 +472,27 @@ int intface_init()
     skilldexButtonUp = art_ptr_lock_data(fid, 0, 0, &skilldexButtonUpKey);
     if (skilldexButtonUp == NULL) {
         // NOTE: Uninline.
-        intface_diag_step++; return intface_fatal_error(-1);
+        return intface_fatal_error(-1);
     }
 
     fid = art_id(OBJ_TYPE_INTERFACE, 7, 0, 0, 0);
     skilldexButtonDown = art_ptr_lock_data(fid, 0, 0, &skilldexButtonDownKey);
     if (skilldexButtonDown == NULL) {
         // NOTE: Uninline.
-        intface_diag_step++; return intface_fatal_error(-1);
+        return intface_fatal_error(-1);
     }
 
     fid = art_id(OBJ_TYPE_INTERFACE, 6, 0, 0, 0);
     skilldexButtonMask = art_ptr_lock_data(fid, 0, 0, &skilldexButtonMaskKey);
     if (skilldexButtonMask == NULL) {
         // NOTE: Uninline.
-        intface_diag_step++; return intface_fatal_error(-1);
+        return intface_fatal_error(-1);
     }
 
     skilldexButton = win_register_button(interfaceWindow, 523, 7, 22, 21, -1, -1, -1, KEY_LOWERCASE_S, skilldexButtonUp, skilldexButtonDown, NULL, BUTTON_FLAG_TRANSPARENT);
     if (skilldexButton == -1) {
         // NOTE: Uninline.
-        intface_diag_step++; return intface_fatal_error(-1);
+        return intface_fatal_error(-1);
     }
 
     win_register_button_mask(skilldexButton, skilldexButtonMask);
@@ -511,27 +502,27 @@ int intface_init()
     automapButtonUp = art_ptr_lock_data(fid, 0, 0, &automapButtonUpKey);
     if (automapButtonUp == NULL) {
         // NOTE: Uninline.
-        intface_diag_step++; return intface_fatal_error(-1);
+        return intface_fatal_error(-1);
     }
 
     fid = art_id(OBJ_TYPE_INTERFACE, 10, 0, 0, 0);
     automapButtonDown = art_ptr_lock_data(fid, 0, 0, &automapButtonDownKey);
     if (automapButtonDown == NULL) {
         // NOTE: Uninline.
-        intface_diag_step++; return intface_fatal_error(-1);
+        return intface_fatal_error(-1);
     }
 
     fid = art_id(OBJ_TYPE_INTERFACE, 13, 0, 0, 0);
     automapButtonMask = art_ptr_lock_data(fid, 0, 0, &automapButtonMaskKey);
     if (automapButtonMask == NULL) {
         // NOTE: Uninline.
-        intface_diag_step++; return intface_fatal_error(-1);
+        return intface_fatal_error(-1);
     }
 
     automapButton = win_register_button(interfaceWindow, 526, 40, 41, 19, -1, -1, -1, KEY_TAB, automapButtonUp, automapButtonDown, NULL, BUTTON_FLAG_TRANSPARENT);
     if (automapButton == -1) {
         // NOTE: Uninline.
-        intface_diag_step++; return intface_fatal_error(-1);
+        return intface_fatal_error(-1);
     }
 
     win_register_button_mask(automapButton, automapButtonMask);
@@ -541,20 +532,20 @@ int intface_init()
     pipboyButtonUp = art_ptr_lock_data(fid, 0, 0, &pipboyButtonUpKey);
     if (pipboyButtonUp == NULL) {
         // NOTE: Uninline.
-        intface_diag_step++; return intface_fatal_error(-1);
+        return intface_fatal_error(-1);
     }
 
     fid = art_id(OBJ_TYPE_INTERFACE, 58, 0, 0, 0);
     pipboyButtonDown = art_ptr_lock_data(fid, 0, 0, &pipboyButtonDownKey);
     if (pipboyButtonDown == NULL) {
         // NOTE: Uninline.
-        intface_diag_step++; return intface_fatal_error(-1);
+        return intface_fatal_error(-1);
     }
 
     pipboyButton = win_register_button(interfaceWindow, 526, 78, 41, 19, -1, -1, -1, KEY_LOWERCASE_P, pipboyButtonUp, pipboyButtonDown, NULL, 0);
     if (pipboyButton == -1) {
         // NOTE: Uninline.
-        intface_diag_step++; return intface_fatal_error(-1);
+        return intface_fatal_error(-1);
     }
 
     win_register_button_mask(pipboyButton, automapButtonMask);
@@ -564,20 +555,20 @@ int intface_init()
     characterButtonUp = art_ptr_lock_data(fid, 0, 0, &characterButtonUpKey);
     if (characterButtonUp == NULL) {
         // NOTE: Uninline.
-        intface_diag_step++; return intface_fatal_error(-1);
+        return intface_fatal_error(-1);
     }
 
     fid = art_id(OBJ_TYPE_INTERFACE, 56, 0, 0, 0);
     characterButtonDown = art_ptr_lock_data(fid, 0, 0, &characterButtonDownKey);
     if (characterButtonDown == NULL) {
         // NOTE: Uninline.
-        intface_diag_step++; return intface_fatal_error(-1);
+        return intface_fatal_error(-1);
     }
 
     characterButton = win_register_button(interfaceWindow, 526, 59, 41, 19, -1, -1, -1, KEY_LOWERCASE_C, characterButtonUp, characterButtonDown, NULL, 0);
     if (characterButton == -1) {
         // NOTE: Uninline.
-        intface_diag_step++; return intface_fatal_error(-1);
+        return intface_fatal_error(-1);
     }
 
     win_register_button_mask(characterButton, automapButtonMask);
@@ -587,21 +578,21 @@ int intface_init()
     itemButtonUpBlank = art_ptr_lock_data(fid, 0, 0, &itemButtonUpKey);
     if (itemButtonUpBlank == NULL) {
         // NOTE: Uninline.
-        intface_diag_step++; return intface_fatal_error(-1);
+        return intface_fatal_error(-1);
     }
 
     fid = art_id(OBJ_TYPE_INTERFACE, 31, 0, 0, 0);
     itemButtonDownBlank = art_ptr_lock_data(fid, 0, 0, &itemButtonDownKey);
     if (itemButtonDownBlank == NULL) {
         // NOTE: Uninline.
-        intface_diag_step++; return intface_fatal_error(-1);
+        return intface_fatal_error(-1);
     }
 
     fid = art_id(OBJ_TYPE_INTERFACE, 73, 0, 0, 0);
     itemButtonDisabled = art_ptr_lock_data(fid, 0, 0, &itemButtonDisabledKey);
     if (itemButtonDisabled == NULL) {
         // NOTE: Uninline.
-        intface_diag_step++; return intface_fatal_error(-1);
+        return intface_fatal_error(-1);
     }
 
     memcpy(itemButtonUp, itemButtonUpBlank, sizeof(itemButtonUp));
@@ -610,7 +601,7 @@ int intface_init()
     itemButton = win_register_button(interfaceWindow, 267, 26, 188, 67, -1, -1, -1, -20, itemButtonUp, itemButtonDown, NULL, BUTTON_FLAG_TRANSPARENT);
     if (itemButton == -1) {
         // NOTE: Uninline.
-        intface_diag_step++; return intface_fatal_error(-1);
+        return intface_fatal_error(-1);
     }
 
     win_register_right_button(itemButton, -1, KEY_LOWERCASE_N, NULL, NULL);
@@ -620,28 +611,28 @@ int intface_init()
     toggleButtonUp = art_ptr_lock_data(fid, 0, 0, &toggleButtonUpKey);
     if (toggleButtonUp == NULL) {
         // NOTE: Uninline.
-        intface_diag_step++; return intface_fatal_error(-1);
+        return intface_fatal_error(-1);
     }
 
     fid = art_id(OBJ_TYPE_INTERFACE, 7, 0, 0, 0);
     toggleButtonDown = art_ptr_lock_data(fid, 0, 0, &toggleButtonDownKey);
     if (toggleButtonDown == NULL) {
         // NOTE: Uninline.
-        intface_diag_step++; return intface_fatal_error(-1);
+        return intface_fatal_error(-1);
     }
 
     fid = art_id(OBJ_TYPE_INTERFACE, 6, 0, 0, 0);
     toggleButtonMask = art_ptr_lock_data(fid, 0, 0, &toggleButtonMaskKey);
     if (toggleButtonMask == NULL) {
         // NOTE: Uninline.
-        intface_diag_step++; return intface_fatal_error(-1);
+        return intface_fatal_error(-1);
     }
 
     // Swap hands button
     toggleButton = win_register_button(interfaceWindow, 218, 6, 22, 21, -1, -1, -1, KEY_LOWERCASE_B, toggleButtonUp, toggleButtonDown, NULL, BUTTON_FLAG_TRANSPARENT);
     if (toggleButton == -1) {
         // NOTE: Uninline.
-        intface_diag_step++; return intface_fatal_error(-1);
+        return intface_fatal_error(-1);
     }
 
     win_register_button_mask(toggleButton, toggleButtonMask);
@@ -651,35 +642,35 @@ int intface_init()
     numbersBuffer = art_ptr_lock_data(fid, 0, 0, &numbersKey);
     if (numbersBuffer == NULL) {
         // NOTE: Uninline.
-        intface_diag_step++; return intface_fatal_error(-1);
+        return intface_fatal_error(-1);
     }
 
     fid = art_id(OBJ_TYPE_INTERFACE, 83, 0, 0, 0);
     moveLightGreen = art_ptr_lock_data(fid, 0, 0, &moveLightGreenKey);
     if (moveLightGreen == NULL) {
         // NOTE: Uninline.
-        intface_diag_step++; return intface_fatal_error(-1);
+        return intface_fatal_error(-1);
     }
 
     fid = art_id(OBJ_TYPE_INTERFACE, 84, 0, 0, 0);
     moveLightYellow = art_ptr_lock_data(fid, 0, 0, &moveLightYellowKey);
     if (moveLightYellow == NULL) {
         // NOTE: Uninline.
-        intface_diag_step++; return intface_fatal_error(-1);
+        return intface_fatal_error(-1);
     }
 
     fid = art_id(OBJ_TYPE_INTERFACE, 85, 0, 0, 0);
     moveLightRed = art_ptr_lock_data(fid, 0, 0, &moveLightRedKey);
     if (moveLightRed == NULL) {
         // NOTE: Uninline.
-        intface_diag_step++; return intface_fatal_error(-1);
+        return intface_fatal_error(-1);
     }
 
     buf_to_buf(interfaceBuffer + 640 * 14 + 316, 90, 5, 640, movePointBackground, 90);
 
     if (construct_box_bar_win() == -1) {
         // NOTE: Uninline.
-        intface_diag_step++; return intface_fatal_error(-1);
+        return intface_fatal_error(-1);
     }
 
     itemCurrentItem = HAND_LEFT;
@@ -2324,7 +2315,6 @@ static void intface_rotate_numbers(int x, int y, int previousValue, int value, i
 // 0x4566E8
 static int intface_fatal_error(int rc)
 {
-    printf("[INIT-DIAG] intface_fatal_error rc=%d step=%d\n", rc, intface_diag_step);
     intface_exit();
 
     return rc;

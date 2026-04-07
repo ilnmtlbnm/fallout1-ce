@@ -128,23 +128,19 @@ int game_init(const char* windowTitle, bool isMapper, int font, int flags, int a
 {
     char path[COMPAT_MAX_PATH];
 
-    printf("[INIT-DIAG] step 1: calling gmemory_init\n"); fflush(stdout);
     if (gmemory_init() == -1) {
         return -1;
     }
 
-    printf("[INIT-DIAG] step 2: calling gconfig_init\n"); fflush(stdout);
     gconfig_init(isMapper, argc, argv);
 
     game_in_mapper = isMapper;
 
-    printf("[INIT-DIAG] step 3: calling game_init_databases\n"); fflush(stdout);
     if (game_init_databases() == -1) {
         gconfig_exit(false);
         return -1;
     }
 
-    printf("[INIT-DIAG] step 4: calling initWindow/palette_init\n"); fflush(stdout);
     win_set_minimized_title(windowTitle);
 
     VideoOptions video_options;
@@ -201,7 +197,6 @@ int game_init(const char* windowTitle, bool isMapper, int font, int flags, int a
     // properly initialized yet.
     KillOldMaps();
 
-    printf("[INIT-DIAG] step 5: calling roll_init/skill_init/stat_init/perk_init/trait_init/item_init/queue_init/critter_init/combat_ai_init\n"); fflush(stdout);
     roll_init();
     init_message();
     skill_init();
@@ -214,18 +209,15 @@ int game_init(const char* windowTitle, bool isMapper, int font, int flags, int a
     combat_ai_init();
     inven_reset_dude();
 
-    printf("[INIT-DIAG] step 6: calling gsound_init\n"); fflush(stdout);
     if (gsound_init() != 0) {
         debug_printf("Sound initialization failed.\n");
     }
 
     debug_printf(">gsound_init\t");
 
-    printf("[INIT-DIAG] step 7: calling initMovie\n"); fflush(stdout);
     initMovie();
     debug_printf(">initMovie\t\t");
 
-    printf("[INIT-DIAG] step 8: calling gmovie_init\n"); fflush(stdout);
     if (gmovie_init() != 0) {
         debug_printf("Failed on gmovie_init\n");
         return -1;
@@ -233,7 +225,6 @@ int game_init(const char* windowTitle, bool isMapper, int font, int flags, int a
 
     debug_printf(">gmovie_init\t");
 
-    printf("[INIT-DIAG] step 9: calling moviefx_init\n"); fflush(stdout);
     if (moviefx_init() != 0) {
         debug_printf("Failed on moviefx_init\n");
         return -1;
@@ -241,7 +232,6 @@ int game_init(const char* windowTitle, bool isMapper, int font, int flags, int a
 
     debug_printf(">moviefx_init\t");
 
-    printf("[INIT-DIAG] step 10: calling iso_init\n"); fflush(stdout);
     if (iso_init() != 0) {
         debug_printf("Failed on iso_init\n");
         return -1;
@@ -249,7 +239,6 @@ int game_init(const char* windowTitle, bool isMapper, int font, int flags, int a
 
     debug_printf(">iso_init\t");
 
-    printf("[INIT-DIAG] step 11: calling gmouse_init\n"); fflush(stdout);
     if (gmouse_init() != 0) {
         debug_printf("Failed on gmouse_init\n");
         return -1;
@@ -257,7 +246,6 @@ int game_init(const char* windowTitle, bool isMapper, int font, int flags, int a
 
     debug_printf(">gmouse_init\t");
 
-    printf("[INIT-DIAG] step 12: calling proto_init\n"); fflush(stdout);
     if (proto_init() != 0) {
         debug_printf("Failed on proto_init\n");
         return -1;
@@ -265,11 +253,9 @@ int game_init(const char* windowTitle, bool isMapper, int font, int flags, int a
 
     debug_printf(">proto_init\t");
 
-    printf("[INIT-DIAG] step 13: calling anim_init\n"); fflush(stdout);
     anim_init();
     debug_printf(">anim_init\t");
 
-    printf("[INIT-DIAG] step 14: calling scr_init\n"); fflush(stdout);
     if (scr_init() != 0) {
         debug_printf("Failed on scr_init\n");
         return -1;
@@ -277,7 +263,6 @@ int game_init(const char* windowTitle, bool isMapper, int font, int flags, int a
 
     debug_printf(">scr_init\t");
 
-    printf("[INIT-DIAG] step 15: calling game_load_info\n"); fflush(stdout);
     if (game_load_info() != 0) {
         debug_printf("Failed on game_load_info\n");
         return -1;
@@ -285,7 +270,6 @@ int game_init(const char* windowTitle, bool isMapper, int font, int flags, int a
 
     debug_printf(">game_load_info\t");
 
-    printf("[INIT-DIAG] step 16: calling scr_game_init\n"); fflush(stdout);
     if (scr_game_init() != 0) {
         debug_printf("Failed on scr_game_init\n");
         return -1;
@@ -293,7 +277,6 @@ int game_init(const char* windowTitle, bool isMapper, int font, int flags, int a
 
     debug_printf(">scr_game_init\t");
 
-    printf("[INIT-DIAG] step 17: calling init_world_map\n"); fflush(stdout);
     if (init_world_map() != 0) {
         debug_printf("Failed on init_world_map\n");
         return -1;
@@ -301,19 +284,15 @@ int game_init(const char* windowTitle, bool isMapper, int font, int flags, int a
 
     debug_printf(">init_world_map\t");
 
-    printf("[INIT-DIAG] step 18: calling CharEditInit\n"); fflush(stdout);
     CharEditInit();
     debug_printf(">CharEditInit\t");
 
-    printf("[INIT-DIAG] step 19: calling pip_init\n"); fflush(stdout);
     pip_init();
     debug_printf(">pip_init\t\t");
 
-    printf("[INIT-DIAG] step 20: calling InitLoadSave\n"); fflush(stdout);
     InitLoadSave();
     debug_printf(">InitLoadSave\t");
 
-    printf("[INIT-DIAG] step 21: calling gdialog_init\n"); fflush(stdout);
     if (gdialog_init() != 0) {
         debug_printf("Failed on gdialog_init\n");
         return -1;
@@ -321,7 +300,6 @@ int game_init(const char* windowTitle, bool isMapper, int font, int flags, int a
 
     debug_printf(">gdialog_init\t");
 
-    printf("[INIT-DIAG] step 22: calling combat_init\n"); fflush(stdout);
     if (combat_init() != 0) {
         debug_printf("Failed on combat_init\n");
         return -1;
@@ -329,7 +307,6 @@ int game_init(const char* windowTitle, bool isMapper, int font, int flags, int a
 
     debug_printf(">combat_init\t");
 
-    printf("[INIT-DIAG] step 23: calling automap_init\n"); fflush(stdout);
     if (automap_init() != 0) {
         debug_printf("Failed on automap_init\n");
         return -1;
@@ -337,7 +314,6 @@ int game_init(const char* windowTitle, bool isMapper, int font, int flags, int a
 
     debug_printf(">automap_init\t");
 
-    printf("[INIT-DIAG] step 24: calling message_init\n"); fflush(stdout);
     if (!message_init(&misc_message_file)) {
         debug_printf("Failed on message_init\n");
         return -1;
@@ -347,7 +323,6 @@ int game_init(const char* windowTitle, bool isMapper, int font, int flags, int a
 
     snprintf(path, sizeof(path), "%s%s", msg_path, "misc.msg");
 
-    printf("[INIT-DIAG] step 25: calling message_load (misc.msg)\n"); fflush(stdout);
     if (!message_load(&misc_message_file, path)) {
         debug_printf("Failed on message_load\n");
         return -1;
@@ -355,7 +330,6 @@ int game_init(const char* windowTitle, bool isMapper, int font, int flags, int a
 
     debug_printf(">message_load\t");
 
-    printf("[INIT-DIAG] step 26: calling scr_disable\n"); fflush(stdout);
     if (scr_disable() != 0) {
         debug_printf("Failed on scr_disable\n");
         return -1;
@@ -363,7 +337,6 @@ int game_init(const char* windowTitle, bool isMapper, int font, int flags, int a
 
     debug_printf(">scr_disable\t");
 
-    printf("[INIT-DIAG] step 27: calling init_options_menu\n"); fflush(stdout);
     if (init_options_menu() != 0) {
         debug_printf("Failed on init_options_menu\n");
         return -1;
@@ -371,7 +344,6 @@ int game_init(const char* windowTitle, bool isMapper, int font, int flags, int a
 
     debug_printf(">init_options_menu\n");
 
-    printf("[INIT-DIAG] game_init complete\n"); fflush(stdout);
     return 0;
 }
 

@@ -204,9 +204,6 @@ int proto_list_str(int pid, char* proto_path)
     strcat(path, ".lst");
 
     DB_FILE* stream = db_fopen(path, "rt");
-    if (stream == NULL) {
-        printf("[PROTO-DIAG] proto_list_str: db_fopen FAILED path='%s' pid=0x%x\n", path, pid);
-    }
 
     int i = 1;
     char string[256];
@@ -221,7 +218,6 @@ int proto_list_str(int pid, char* proto_path)
     db_fclose(stream);
 
     if (i != (pid & 0xFFFFFF)) {
-        printf("[PROTO-DIAG] proto_list_str: line not found i=%d target=%d path='%s'\n", i, pid & 0xFFFFFF, path);
         return -1;
     }
 
@@ -443,8 +439,6 @@ int proto_read_protoUpdateData(Object* obj, DB_FILE* stream)
     Proto* proto;
     int temp;
 
-    printf("[PROTO-DIAG] pid=0x%x type=%d\n", obj->pid, PID_TYPE(obj->pid));
-
     Inventory* inventory = &(obj->data.inventory);
     if (db_freadInt32(stream, &(inventory->length)) == -1) return -1;
     if (db_freadInt32(stream, &(inventory->capacity)) == -1) return -1;
@@ -468,7 +462,6 @@ int proto_read_protoUpdateData(Object* obj, DB_FILE* stream)
         switch (PID_TYPE(obj->pid)) {
         case OBJ_TYPE_ITEM:
             if (proto_ptr(obj->pid, &proto) == -1) {
-                printf("[PROTO-DIAG] proto_ptr FAILED pid=0x%x\n", obj->pid);
                 return -1;
             }
 
@@ -493,7 +486,6 @@ int proto_read_protoUpdateData(Object* obj, DB_FILE* stream)
             break;
         case OBJ_TYPE_SCENERY:
             if (proto_ptr(obj->pid, &proto) == -1) {
-                printf("[PROTO-DIAG] proto_ptr FAILED pid=0x%x\n", obj->pid);
                 return -1;
             }
 
@@ -1061,44 +1053,36 @@ int proto_init()
     // NOTE: Uninline.
     proto_remove_all();
 
-    printf("[INIT-DIAG] proto_init: calling proto_header_load\n");
     proto_header_load();
 
     protos_been_initialized = 1;
 
-    printf("[INIT-DIAG] proto_init: calling proto_dude_init\n");
     proto_dude_init("premade\\player.gcd");
 
     for (i = 0; i < 6; i++) {
         if (!message_init(&(proto_msg_files[i]))) {
-            printf("[INIT-DIAG] proto_init: message_init FAILED for type %d\n", i);
             return -1;
         }
     }
 
-    printf("[INIT-DIAG] proto_init: loading proto msg files\n");
     for (i = 0; i < 6; i++) {
         snprintf(path, sizeof(path), "%spro_%.4s%s", msg_path, art_dir(i), ".msg");
 
         if (!message_load(&(proto_msg_files[i]), path)) {
-            printf("[INIT-DIAG] proto_init: message_load FAILED for '%s'\n", path);
             return -1;
         }
     }
 
-    printf("[INIT-DIAG] proto_init: msg files loaded, checking stat names\n");
     mp_critter_stats_list[0] = _aDrugStatSpecia;
     mp_critter_stats_list[1] = _aNone_1;
     critter_stats_list = &(mp_critter_stats_list[2]);
     for (i = 0; i < STAT_COUNT; i++) {
         critter_stats_list[i] = stat_name(i);
         if (critter_stats_list[i] == NULL) {
-            printf("[INIT-DIAG] proto_init: stat_name(%d) returned NULL\n", i);
             return -1;
         }
     }
 
-    printf("[INIT-DIAG] proto_init: checking perk names\n");
     mp_perk_code_strs[0] = _aNone_1;
     perk_code_strs = &(mp_perk_code_strs[1]);
     for (i = 0; i < PERK_COUNT; i++) {
@@ -1108,16 +1092,13 @@ int proto_init()
         }
     }
 
-    printf("[INIT-DIAG] proto_init: loading proto.msg\n");
     if (!message_init(&proto_main_msg_file)) {
-        printf("[INIT-DIAG] proto_init: proto_main_msg_file init FAILED\n");
         return -1;
     }
 
     snprintf(path, sizeof(path), "%sproto.msg", msg_path);
 
     if (!message_load(&proto_main_msg_file, path)) {
-        printf("[INIT-DIAG] proto_init: proto.msg load FAILED\n");
         return -1;
     }
 
@@ -1660,7 +1641,6 @@ int proto_load_pid(int pid, Proto** protoPtr)
 
     DB_FILE* stream = db_fopen(path, "rb");
     if (stream == NULL) {
-        printf("[PROTO-DIAG] proto_load_pid: db_fopen FAILED path='%s' pid=0x%x\n", path, pid);
         *protoPtr = NULL;
         return -1;
     }
