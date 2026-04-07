@@ -307,22 +307,36 @@ int partyMemberRecoverLoad()
         return -1;
     }
 
+    if (map_data.version < 19) {
+        // v16 demo: scr_new crashes due to v16 script format.
+        // Skip script recovery — demo has no party members anyway.
+        partyStatePrepped = 0;
+        return 0;
+    }
+
     debug_printf("\n");
 
+    printf("[PARTY-DIAG] partyMemberRecoverLoad: count=%d prepped=%d\n", partyMemberCount, partyStatePrepped);
     for (index = 0; index < partyMemberCount; index++) {
         partyMember = &(partyMemberList[index]);
+        printf("[PARTY-DIAG] member[%d]: obj=%p script=%p vars=%p\n", index,
+            (void*)partyMember->object, (void*)partyMember->script, (void*)partyMember->vars);
         if (partyMember->script != NULL) {
+            printf("[PARTY-DIAG] member[%d]: calling scr_new\n", index);
             if (scr_new(&sid, SCRIPT_TYPE_CRITTER) == -1) {
                 GNWSystemError("\n  Error!: partyMemberRecoverLoad: Can't create script!");
                 exit(1);
             }
+            printf("[PARTY-DIAG] member[%d]: scr_new OK sid=%d, calling scr_ptr\n", index, sid);
 
             if (scr_ptr(sid, &script) == -1) {
                 GNWSystemError("\n  Error!: partyMemberRecoverLoad: Can't find script!");
                 exit(1);
             }
+            printf("[PARTY-DIAG] member[%d]: scr_ptr OK, calling memcpy\n", index);
 
             memcpy(script, partyMember->script, sizeof(*script));
+            printf("[PARTY-DIAG] member[%d]: memcpy done\n", index);
 
             partyMember->object->sid = ((partyMember->object->pid & 0xFFFFFF) + 18000) | (SCRIPT_TYPE_CRITTER << 24);
             script->scr_id = partyMember->object->sid;

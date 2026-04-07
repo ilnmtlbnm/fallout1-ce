@@ -989,9 +989,13 @@ int map_load_file(DB_FILE* stream)
         if (tile_set_center(map_data.enteringTile, TILE_SET_CENTER_FLAG_IGNORE_SCROLL_RESTRICTIONS) != 0) break;
 
         printf("[MAP-DIAG] map loaded OK: elevation=%d centerTile=%d\n", map_elevation, tile_center_tile);
+        printf("[MAP-DIAG] calling light_set_ambient\n");
         light_set_ambient(LIGHT_LEVEL_MAX, false);
+        printf("[MAP-DIAG] calling obj_move_to_tile\n");
         obj_move_to_tile(obj_dude, tile_center_tile, map_elevation, NULL);
+        printf("[MAP-DIAG] calling obj_set_rotation\n");
         obj_set_rotation(obj_dude, map_data.enteringRotation, NULL);
+        printf("[MAP-DIAG] calling map_match_map_number\n");
         map_match_map_number();
 
         if ((map_data.flags & 1) == 0) {
@@ -1012,7 +1016,9 @@ int map_load_file(DB_FILE* stream)
             map_data.globalVariablesCount = num_map_global_vars;
         }
 
+        printf("[MAP-DIAG] calling scr_enable\n");
         scr_enable();
+        printf("[MAP-DIAG] scr_enable done, scriptIndex=%d\n", map_data.scriptIndex);
 
         if (map_data.scriptIndex > 0) {
             error = "Error creating new map script";
@@ -1048,21 +1054,30 @@ int map_load_file(DB_FILE* stream)
         map_new_map();
         rc = -1;
     } else {
+        printf("[MAP-DIAG] calling obj_preload_art_cache\n");
         obj_preload_art_cache(map_data.flags);
+        printf("[MAP-DIAG] obj_preload_art_cache done\n");
     }
 
+    printf("[MAP-DIAG] calling partyMemberRecoverLoad\n");
     partyMemberRecoverLoad();
+    printf("[MAP-DIAG] calling intface_show\n");
     intface_show();
+    printf("[MAP-DIAG] calling map_place_dude_and_mouse\n");
     map_place_dude_and_mouse();
+    printf("[MAP-DIAG] calling map_enable_bk_processes\n");
     map_enable_bk_processes();
     gmouse_disable_scrolling();
     gmouse_set_cursor(MOUSE_CURSOR_WAIT_PLANET);
 
+    printf("[MAP-DIAG] calling scr_load_all_scripts\n");
     if (scr_load_all_scripts() == -1) {
         debug_printf("\n   Error: scr_load_all_scripts failed!");
     }
 
+    printf("[MAP-DIAG] calling scr_exec_map_enter_scripts\n");
     scr_exec_map_enter_scripts();
+    printf("[MAP-DIAG] calling scr_exec_map_update_scripts\n");
     scr_exec_map_update_scripts();
     printf("[MAP-DIAG] enabling tile refresh\n");
     tile_enable_refresh();
