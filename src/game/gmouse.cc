@@ -1655,6 +1655,10 @@ int gmouse_3d_build_pick_frame(int x, int y, int menuItem, int width, int height
 
         arrowFid = art_id(OBJ_TYPE_INTERFACE, 285, 0, 0, 0);
         arrowFrm = art_ptr_lock(arrowFid, &arrowFrmHandle);
+        if (arrowFrm == NULL) {
+            art_ptr_unlock(menuItemFrmHandle);
+            return -1;
+        }
         arrowFrmData = art_frame_data(arrowFrm, 0, 0);
         arrowFrmDest += menuItemFrmWidth;
 
@@ -1761,6 +1765,12 @@ int gmouse_3d_build_menu_frame(int x, int y, const int* menuItems, int menuItems
         // Mirrored arrow (from left to right).
         fid = art_id(OBJ_TYPE_INTERFACE, 285, 0, 0, 0);
         arrowFrm = art_ptr_lock(fid, &arrowFrmHandle);
+        if (arrowFrm == NULL) {
+            for (int index = 0; index < menuItemsLength; index++) {
+                art_ptr_unlock(menuItemFrmHandles[index]);
+            }
+            return -1;
+        }
         arrowData = art_frame_data(arrowFrm, 0, 0);
         gmouse_3d_menu_frame->xOffsets[0] = -gmouse_3d_menu_frame->xOffsets[0];
         gmouse_3d_menu_frame_hot_x += menuItemWidth + arrowWidth;
