@@ -45,6 +45,9 @@ namespace fallout {
 #define GAMMA_MAX 1.17999267578125
 #define GAMMA_STEP 0.01124954223632812
 
+// Demo OPTIONS.MSG uses message IDs shifted +100 relative to the full game.
+#define OPTN_MSG_OFFSET 100
+
 typedef enum Preference {
     PREF_GAME_DIFFICULTY,
     PREF_COMBAT_DIFFICULTY,
@@ -356,25 +359,25 @@ static int game_difficulty;
 
 // 0x505D68
 static PreferenceDescription btndat[PREF_COUNT] = {
-    { 3, 0, 76, 71, 0, 0, { 203, 204, 205, 0 }, 0, GAME_CONFIG_GAME_DIFFICULTY_KEY, 0, 0, &game_difficulty },
-    { 3, 0, 76, 149, 0, 0, { 206, 204, 208, 0 }, 0, GAME_CONFIG_COMBAT_DIFFICULTY_KEY, 0, 0, &combat_difficulty },
-    { 4, 0, 76, 226, 0, 0, { 214, 215, 204, 216 }, 0, GAME_CONFIG_VIOLENCE_LEVEL_KEY, 0, 0, &violence_level },
-    { 3, 0, 76, 309, 0, 0, { 202, 201, 213, 0 }, 0, GAME_CONFIG_TARGET_HIGHLIGHT_KEY, 0, 0, &target_highlight },
-    { 2, 0, 76, 387, 0, 0, { 202, 201, 0, 0 }, 0, GAME_CONFIG_RUNNING_BURNING_GUY_KEY, 0, 0, &running_burning_guy },
-    { 2, 0, 299, 74, 0, 0, { 211, 212, 0, 0 }, 0, GAME_CONFIG_COMBAT_MESSAGES_KEY, 0, 0, &combat_messages },
-    { 2, 0, 299, 141, 0, 0, { 202, 201, 0, 0 }, 0, GAME_CONFIG_COMBAT_TAUNTS_KEY, 0, 0, &combat_taunts },
-    { 2, 0, 299, 207, 0, 0, { 202, 201, 0, 0 }, 0, GAME_CONFIG_LANGUAGE_FILTER_KEY, 0, 0, &language_filter },
-    { 2, 0, 299, 271, 0, 0, { 209, 219, 0, 0 }, 0, GAME_CONFIG_RUNNING_KEY, 0, 0, &prf_running },
-    { 2, 0, 299, 338, 0, 0, { 202, 201, 0, 0 }, 0, GAME_CONFIG_SUBTITLES_KEY, 0, 0, &subtitles },
-    { 2, 0, 299, 404, 0, 0, { 202, 201, 0, 0 }, 0, GAME_CONFIG_ITEM_HIGHLIGHT_KEY, 0, 0, &item_highlight },
-    { 2, 0, 374, 50, 0, 0, { 207, 210, 0, 0 }, 0, GAME_CONFIG_COMBAT_SPEED_KEY, 0.0, 50.0, &combat_speed },
-    { 3, 0, 374, 125, 0, 0, { 217, 209, 218, 0 }, 0, GAME_CONFIG_TEXT_BASE_DELAY_KEY, 1.0, 6.0, NULL },
-    { 4, 0, 374, 196, 0, 0, { 202, 221, 209, 222 }, 0, GAME_CONFIG_MASTER_VOLUME_KEY, 0, 32767.0, &master_volume },
-    { 4, 0, 374, 247, 0, 0, { 202, 221, 209, 222 }, 0, GAME_CONFIG_MUSIC_VOLUME_KEY, 0, 32767.0, &music_volume },
-    { 4, 0, 374, 298, 0, 0, { 202, 221, 209, 222 }, 0, GAME_CONFIG_SNDFX_VOLUME_KEY, 0, 32767.0, &sndfx_volume },
-    { 4, 0, 374, 349, 0, 0, { 202, 221, 209, 222 }, 0, GAME_CONFIG_SPEECH_VOLUME_KEY, 0, 32767.0, &speech_volume },
-    { 2, 0, 374, 400, 0, 0, { 207, 223, 0, 0 }, 0, GAME_CONFIG_BRIGHTNESS_KEY, 1.0, 1.17999267578125, NULL },
-    { 2, 0, 374, 451, 0, 0, { 207, 218, 0, 0 }, 0, GAME_CONFIG_MOUSE_SENSITIVITY_KEY, 1.0, 2.5, NULL },
+    { 3, 0, 76, 71, 0, 0, { 303, 304, 305, 0 }, 0, GAME_CONFIG_GAME_DIFFICULTY_KEY, 0, 0, &game_difficulty },
+    { 3, 0, 76, 149, 0, 0, { 306, 304, 308, 0 }, 0, GAME_CONFIG_COMBAT_DIFFICULTY_KEY, 0, 0, &combat_difficulty },
+    { 4, 0, 76, 226, 0, 0, { 314, 315, 304, 316 }, 0, GAME_CONFIG_VIOLENCE_LEVEL_KEY, 0, 0, &violence_level },
+    { 3, 0, 76, 309, 0, 0, { 302, 301, 313, 0 }, 0, GAME_CONFIG_TARGET_HIGHLIGHT_KEY, 0, 0, &target_highlight },
+    { 2, 0, 76, 387, 0, 0, { 302, 301, 0, 0 }, 0, GAME_CONFIG_RUNNING_BURNING_GUY_KEY, 0, 0, &running_burning_guy },
+    { 2, 0, 299, 74, 0, 0, { 311, 312, 0, 0 }, 0, GAME_CONFIG_COMBAT_MESSAGES_KEY, 0, 0, &combat_messages },
+    { 2, 0, 299, 141, 0, 0, { 302, 301, 0, 0 }, 0, GAME_CONFIG_COMBAT_TAUNTS_KEY, 0, 0, &combat_taunts },
+    { 2, 0, 299, 207, 0, 0, { 302, 301, 0, 0 }, 0, GAME_CONFIG_LANGUAGE_FILTER_KEY, 0, 0, &language_filter },
+    { 2, 0, 299, 271, 0, 0, { 309, 319, 0, 0 }, 0, GAME_CONFIG_RUNNING_KEY, 0, 0, &prf_running },
+    { 2, 0, 299, 338, 0, 0, { 302, 301, 0, 0 }, 0, GAME_CONFIG_SUBTITLES_KEY, 0, 0, &subtitles },
+    { 2, 0, 299, 404, 0, 0, { 302, 301, 0, 0 }, 0, GAME_CONFIG_ITEM_HIGHLIGHT_KEY, 0, 0, &item_highlight },
+    { 2, 0, 374, 50, 0, 0, { 307, 310, 0, 0 }, 0, GAME_CONFIG_COMBAT_SPEED_KEY, 0.0, 50.0, &combat_speed },
+    { 3, 0, 374, 125, 0, 0, { 317, 309, 318, 0 }, 0, GAME_CONFIG_TEXT_BASE_DELAY_KEY, 1.0, 6.0, NULL },
+    { 4, 0, 374, 196, 0, 0, { 302, 321, 309, 322 }, 0, GAME_CONFIG_MASTER_VOLUME_KEY, 0, 32767.0, &master_volume },
+    { 4, 0, 374, 247, 0, 0, { 302, 321, 309, 322 }, 0, GAME_CONFIG_MUSIC_VOLUME_KEY, 0, 32767.0, &music_volume },
+    { 4, 0, 374, 298, 0, 0, { 302, 321, 309, 322 }, 0, GAME_CONFIG_SNDFX_VOLUME_KEY, 0, 32767.0, &sndfx_volume },
+    { 4, 0, 374, 349, 0, 0, { 302, 321, 309, 322 }, 0, GAME_CONFIG_SPEECH_VOLUME_KEY, 0, 32767.0, &speech_volume },
+    { 2, 0, 374, 400, 0, 0, { 307, 323, 0, 0 }, 0, GAME_CONFIG_BRIGHTNESS_KEY, 1.0, 1.17999267578125, NULL },
+    { 2, 0, 374, 451, 0, 0, { 307, 318, 0, 0 }, 0, GAME_CONFIG_MOUSE_SENSITIVITY_KEY, 1.0, 2.5, NULL },
 };
 
 // 0x481328
@@ -559,7 +562,7 @@ static int OptnStart()
     for (int index = 0; index < OPTIONS_WINDOW_BUTTONS_COUNT; index += 2) {
         char text[128];
 
-        const char* msg = getmsg(&optn_msgfl, &optnmesg, index / 2);
+        const char* msg = getmsg(&optn_msgfl, &optnmesg, index / 2 + OPTN_MSG_OFFSET);
         strcpy(text, msg);
 
         int textX = (ginfo[OPTIONS_WINDOW_FRM_BUTTON_ON].width - text_width(text)) / 2;
@@ -709,7 +712,7 @@ int PauseWindow(bool is_world_map)
 
     char* messageItemText;
 
-    messageItemText = getmsg(&optn_msgfl, &optnmesg, 300);
+    messageItemText = getmsg(&optn_msgfl, &optnmesg, 300 + OPTN_MSG_OFFSET);
     text_to_buf(windowBuffer + frmSizes[PAUSE_WINDOW_FRM_BACKGROUND].width * 45 + 52,
         messageItemText,
         frmSizes[PAUSE_WINDOW_FRM_BACKGROUND].width,
@@ -718,7 +721,7 @@ int PauseWindow(bool is_world_map)
 
     text_font(104);
 
-    messageItemText = getmsg(&optn_msgfl, &optnmesg, 301);
+    messageItemText = getmsg(&optn_msgfl, &optnmesg, 301 + OPTN_MSG_OFFSET);
     strcpy(path, messageItemText);
 
     int length = text_width(path);
@@ -940,7 +943,7 @@ static int PrefStart()
 
     text_font(104);
 
-    messageItemText = getmsg(&optn_msgfl, &optnmesg, 100);
+    messageItemText = getmsg(&optn_msgfl, &optnmesg, 100 + OPTN_MSG_OFFSET);
     text_to_buf(prefbuf + PREFERENCES_WINDOW_WIDTH * 10 + 74, messageItemText, PREFERENCES_WINDOW_WIDTH, PREFERENCES_WINDOW_WIDTH, colorTable[18979]);
 
     text_font(103);
@@ -957,7 +960,7 @@ static int PrefStart()
         button_count = 4;
     }
 
-    messageItemId = 101;
+    messageItemId = 101 + OPTN_MSG_OFFSET;
     for (i = 0; i < button_count; i++) {
         messageItemText = getmsg(&optn_msgfl, &optnmesg, messageItemId++);
         x = 99 - text_width(messageItemText) / 2;
@@ -979,20 +982,20 @@ static int PrefStart()
     }
 
     // DEFAULT
-    messageItemText = getmsg(&optn_msgfl, &optnmesg, 120);
+    messageItemText = getmsg(&optn_msgfl, &optnmesg, 120 + OPTN_MSG_OFFSET);
     text_to_buf(prefbuf + PREFERENCES_WINDOW_WIDTH * 449 + 43, messageItemText, PREFERENCES_WINDOW_WIDTH, PREFERENCES_WINDOW_WIDTH, colorTable[18979]);
 
     // DONE
-    messageItemText = getmsg(&optn_msgfl, &optnmesg, 4);
+    messageItemText = getmsg(&optn_msgfl, &optnmesg, 4 + OPTN_MSG_OFFSET);
     text_to_buf(prefbuf + PREFERENCES_WINDOW_WIDTH * 449 + 169, messageItemText, PREFERENCES_WINDOW_WIDTH, PREFERENCES_WINDOW_WIDTH, colorTable[18979]);
 
     // CANCEL
-    messageItemText = getmsg(&optn_msgfl, &optnmesg, 121);
+    messageItemText = getmsg(&optn_msgfl, &optnmesg, 121 + OPTN_MSG_OFFSET);
     text_to_buf(prefbuf + PREFERENCES_WINDOW_WIDTH * 449 + 283, messageItemText, PREFERENCES_WINDOW_WIDTH, PREFERENCES_WINDOW_WIDTH, colorTable[18979]);
 
     // Affect player speed
     text_font(101);
-    messageItemText = getmsg(&optn_msgfl, &optnmesg, 122);
+    messageItemText = getmsg(&optn_msgfl, &optnmesg, 122 + OPTN_MSG_OFFSET);
     text_to_buf(prefbuf + PREFERENCES_WINDOW_WIDTH * 72 + 405, messageItemText, PREFERENCES_WINDOW_WIDTH, PREFERENCES_WINDOW_WIDTH, colorTable[18979]);
 
     for (i = 0; i < PREF_COUNT; i++) {
