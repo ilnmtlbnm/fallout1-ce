@@ -7,6 +7,7 @@
 #include <algorithm>
 
 #include "game/art.h"
+#include "game/bmpdlog.h"
 #include "game/combat.h"
 #include "game/combatai.h"
 #include "game/cycle.h"
@@ -441,7 +442,17 @@ int do_options()
         }
 
         if (showPreferences) {
-            do_prefscreen();
+            MessageListItem demoCheck;
+            demoCheck.num = 1000;
+            if (message_search(&optn_msgfl, &demoCheck)) {
+                MessageListItem demoLine2;
+                demoLine2.num = 1001;
+                message_search(&optn_msgfl, &demoLine2);
+                const char* body[] = { demoLine2.text };
+                dialog_out(demoCheck.text, body, 1, 169, 117, colorTable[32328], NULL, colorTable[32328], 0);
+            } else {
+                do_prefscreen();
+            }
         } else {
             switch (keyCode) {
             case KEY_F12:
