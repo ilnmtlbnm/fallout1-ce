@@ -340,6 +340,32 @@ int SaveGame(int mode)
 {
     MessageListItem messageListItem;
 
+    // Demo mode check: LSGAME.MSG ID 200 exists only in demo, with "Sorry you can't save or load"
+    {
+        MessageList demoMsgfl;
+        if (message_init(&demoMsgfl)) {
+            char demoPath[COMPAT_MAX_PATH];
+            snprintf(demoPath, sizeof(demoPath), "%s%s", msg_path, LSGAME_MSG_NAME);
+            if (message_load(&demoMsgfl, demoPath)) {
+                MessageListItem demoMsg;
+                demoMsg.num = 200;
+                if (message_search(&demoMsgfl, &demoMsg)) {
+                    MessageListItem demoMsg2;
+                    demoMsg2.num = 201;
+                    message_search(&demoMsgfl, &demoMsg2);
+                    gsound_play_sfx_file("iisxxxx1");
+                    strcpy(str0, demoMsg.text);
+                    strcpy(str1, demoMsg2.text);
+                    const char* demoBody[] = { str1 };
+                    dialog_out(str0, demoBody, 1, 169, 116, colorTable[32328], NULL, colorTable[32328], DIALOG_BOX_LARGE);
+                    message_exit(&demoMsgfl);
+                    return -1;
+                }
+            }
+            message_exit(&demoMsgfl);
+        }
+    }
+
     ls_error_code = 0;
 
     if (!config_get_string(&game_config, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_MASTER_PATCHES_KEY, &patches)) {
@@ -852,6 +878,32 @@ int LoadGame(int mode)
         str1,
         str2,
     };
+
+    // Demo mode check: LSGAME.MSG ID 200 exists only in demo, with "Sorry you can't save or load"
+    {
+        MessageList demoMsgfl;
+        if (message_init(&demoMsgfl)) {
+            char demoPath[COMPAT_MAX_PATH];
+            snprintf(demoPath, sizeof(demoPath), "%s%s", msg_path, LSGAME_MSG_NAME);
+            if (message_load(&demoMsgfl, demoPath)) {
+                MessageListItem demoMsg;
+                demoMsg.num = 200;
+                if (message_search(&demoMsgfl, &demoMsg)) {
+                    MessageListItem demoMsg2;
+                    demoMsg2.num = 201;
+                    message_search(&demoMsgfl, &demoMsg2);
+                    gsound_play_sfx_file("iisxxxx1");
+                    strcpy(str0, demoMsg.text);
+                    strcpy(str1, demoMsg2.text);
+                    const char* demoBody[] = { str1 };
+                    dialog_out(str0, demoBody, 1, 169, 116, colorTable[32328], NULL, colorTable[32328], DIALOG_BOX_LARGE);
+                    message_exit(&demoMsgfl);
+                    return -1;
+                }
+            }
+            message_exit(&demoMsgfl);
+        }
+    }
 
     ls_error_code = 0;
 
