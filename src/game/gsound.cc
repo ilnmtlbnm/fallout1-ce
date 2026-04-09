@@ -1199,6 +1199,17 @@ Sound* gsound_load_sound(const char* name, Object* object)
         return sound;
     }
 
+    // Demo compatibility: try .SND if .ACM not found
+    snprintf(path, sizeof(path), "%s%s%s", sound_sfx_path, name, ".SND");
+
+    if (soundLoad(sound, path) == 0) {
+        if (gsound_debug) {
+            debug_printf("succeeded (SND fallback).\n");
+        }
+
+        return sound;
+    }
+
     if (object != NULL) {
         if (FID_TYPE(object->fid) == OBJ_TYPE_CRITTER && (name[0] == 'H' || name[0] == 'N')) {
             char v9 = name[1];
