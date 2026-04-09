@@ -1090,7 +1090,7 @@ int exec_script_proc(int sid, int action)
 
         script->program = loadProgram(name);
         if (script->program == NULL) {
-            debug_printf("\nError: exec_script_proc: script load failed!");
+            debug_printf("\nexec_script_proc: missing script '%s' (sid=%d idx=%d), skipping\n", name, sid, script->scr_script_idx);
             return -1;
         }
 
@@ -1828,6 +1828,13 @@ static int scr_read_ScriptSubNode(Script* scr, DB_FILE* stream)
     scr->owner = NULL;
     scr->source = NULL;
     scr->target = NULL;
+
+    char scr_name_buf[16];
+    if (scr_list_str(scr->scr_script_idx, scr_name_buf, sizeof(scr_name_buf)) == 0) {
+        debug_printf("Script loaded from map: sid=%d script_idx=%d name=%s\n", scr->scr_id, scr->scr_script_idx, scr_name_buf);
+    } else {
+        debug_printf("Script loaded from map: sid=%d script_idx=%d (name lookup failed)\n", scr->scr_id, scr->scr_script_idx);
+    }
 
     for (int index = 0; index < SCRIPT_PROC_COUNT; index++) {
         scr->procs[index] = 0;

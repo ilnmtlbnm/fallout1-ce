@@ -430,9 +430,7 @@ Program* allocateProgram(const char* path)
 {
     DB_FILE* stream = db_fopen(path, "rb");
     if (stream == NULL) {
-        char err[260];
-        snprintf(err, sizeof(err), "Couldn't open %s for read\n", path);
-        interpretError(err);
+        debug_printf("Script not found (skipping): %s\n", path);
         return NULL;
     }
 
