@@ -1727,6 +1727,10 @@ static long gsound_filesize(int handle)
 // 0x4493B4
 static bool gsound_compressed_query(char* filePath)
 {
+    size_t len = strlen(filePath);
+    if (len >= 4 && (strcmp(filePath + len - 4, ".SND") == 0 || strcmp(filePath + len - 4, ".snd") == 0)) {
+        return false;
+    }
     return true;
 }
 
