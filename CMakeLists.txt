@@ -351,6 +351,7 @@ if(EMSCRIPTEN)
     "--use-port=sdl2"
     -sASYNCIFY
     -sASYNCIFY_STACK_SIZE=10000000
+    "-sASYNCIFY_REMOVE=[\"_ZN7falloutL16audioEngineMixinEPvPhi\"]"
     -sALLOW_MEMORY_GROWTH
     -sEXIT_RUNTIME=1
     -lidbfs.js
