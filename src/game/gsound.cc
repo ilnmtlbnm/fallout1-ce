@@ -237,7 +237,6 @@ int gsound_init()
     }
 
     int sfxcResult = sfxc_init(cacheSize << 10, sound_sfx_path, gsound_8bit_sfx ? 0 : 1);
-    printf("[gsound] 8bit=%d sfxc_init=%d initialized=1\n", gsound_8bit_sfx, sfxcResult);
 
     add_bk_process(gsound_bkg_proc);
     gsound_initialized = true;
@@ -1185,7 +1184,6 @@ Sound* gsound_load_sound(const char* name, Object* object)
 
     int loadResult = soundLoad(sound, path);
     if (loadResult == 0) {
-        printf("[sfx] %s.ACM ok\n", name);
         return sound;
     }
 
@@ -1193,7 +1191,6 @@ Sound* gsound_load_sound(const char* name, Object* object)
     snprintf(path, sizeof(path), "%s%s%s", sound_sfx_path, name, ".SND");
 
     loadResult = soundLoad(sound, path);
-    printf("[sfx] %s.SND = %d\n", name, loadResult);
     if (loadResult == 0) {
         return sound;
     }
@@ -1214,13 +1211,13 @@ Sound* gsound_load_sound(const char* name, Object* object)
             snprintf(path, sizeof(path), "%sH%cXXXX%s%s", sound_sfx_path, v9, name + 6, ".ACM");
             if (soundLoad(sound, path) == 0) { return sound; }
             snprintf(path, sizeof(path), "%sH%cXXXX%s%s", sound_sfx_path, v9, name + 6, ".SND");
-            if (soundLoad(sound, path) == 0) { printf("[sfx-play] %s (alias XXXX)\n", path); return sound; }
+            if (soundLoad(sound, path) == 0) { return sound; }
 
             if (v9 == 'F') {
                 snprintf(path, sizeof(path), "%sHMXXXX%s%s", sound_sfx_path, name + 6, ".ACM");
                 if (soundLoad(sound, path) == 0) { return sound; }
                 snprintf(path, sizeof(path), "%sHMXXXX%s%s", sound_sfx_path, name + 6, ".SND");
-                if (soundLoad(sound, path) == 0) { printf("[sfx-play] %s (male alias)\n", path); return sound; }
+                if (soundLoad(sound, path) == 0) { return sound; }
             }
         }
     }
@@ -1229,7 +1226,7 @@ Sound* gsound_load_sound(const char* name, Object* object)
         snprintf(path, sizeof(path), "%sMAMTNT%s%s", sound_sfx_path, name + 6, ".ACM");
         if (soundLoad(sound, path) == 0) { return sound; }
         snprintf(path, sizeof(path), "%sMAMTNT%s%s", sound_sfx_path, name + 6, ".SND");
-        if (soundLoad(sound, path) == 0) { printf("[sfx-play] %s (mutant alias)\n", path); return sound; }
+        if (soundLoad(sound, path) == 0) { return sound; }
     }
 
     --gsound_active_effect_counter;
