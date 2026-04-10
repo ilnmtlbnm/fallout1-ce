@@ -211,48 +211,32 @@ int gsound_init()
     soundRegisterAlloc(mem_malloc, mem_realloc, mem_free);
 
     // initialize direct sound
-    if (soundInit(detectDevices, 24, 0x8000, 0x8000, 22050) != 0) {
-        if (gsound_debug) {
-            debug_printf("failed!\n");
-        }
-
+    int soundInitResult = soundInit(detectDevices, 24, 0x8000, 0x8000, 22050);
+    if (soundInitResult != 0) {
         return -1;
-    }
-
-    if (gsound_debug) {
-        debug_printf("success.\n");
     }
 
     initAudiof(gsound_compressed_query);
     initAudio(gsound_compressed_query);
 
-    int cacheSize;
-    config_get_value(&game_config, GAME_CONFIG_SOUND_KEY, GAME_CONFIG_CACHE_SIZE_KEY, &cacheSize);
-    if (cacheSize >= 0x40000) {
-        debug_printf("\n!!! Config file needs adustment.  Please remove the ");
-        debug_printf("cache_size line and run fallout again.  This will reset ");
-        debug_printf("cache_size to the new default, which is expressed in K.\n");
-        return -1;
-    }
-
-    if (sfxc_init(cacheSize << 10, sound_sfx_path) != 0) {
-        if (gsound_debug) {
-            debug_printf("Unable to initialize sound effects cache.\n");
-        }
-    }
-
     if (soundSetDefaultFileIO(gsound_open, gsound_close, gsound_read, gsound_write, gsound_seek, gsound_tell, gsound_filesize) != 0) {
-        if (gsound_debug) {
-            debug_printf("Failure setting sound I/O calls.\n");
-        }
         return -1;
     }
 
-    // Detect demo SFX format: demo has .SND files, full game has .ACM
+    // Detect demo SFX format: demo has .SND files (uncompressed), full game has .ACM (compressed)
     DB_FILE* probe = db_fopen("sound\\sfx\\butin1.SND", "rb");
     if (probe != NULL) {
         db_fclose(probe);
         gsound_8bit_sfx = true;
+    }
+
+    int cacheSize;
+    config_get_value(&game_config, GAME_CONFIG_SOUND_KEY, GAME_CONFIG_CACHE_SIZE_KEY, &cacheSize);
+    if (cacheSize >= 0x40000) {
+        return -1;
+    }
+
+    if (sfxc_init(cacheSize << 10, sound_sfx_path, gsound_8bit_sfx ? 0 : 1) != 0) {
     }
 
     add_bk_process(gsound_bkg_proc);
@@ -1199,22 +1183,16 @@ Sound* gsound_load_sound(const char* name, Object* object)
     char path[COMPAT_MAX_PATH];
     snprintf(path, sizeof(path), "%s%s%s", sound_sfx_path, name, ".ACM");
 
-    if (soundLoad(sound, path) == 0) {
-        if (gsound_debug) {
-            debug_printf("succeeded.\n");
-        }
-
+    int loadResult = soundLoad(sound, path);
+    if (loadResult == 0) {
         return sound;
     }
 
     // Demo compatibility: try .SND if .ACM not found
     snprintf(path, sizeof(path), "%s%s%s", sound_sfx_path, name, ".SND");
 
-    if (soundLoad(sound, path) == 0) {
-        if (gsound_debug) {
-            debug_printf("succeeded (SND fallback).\n");
-        }
-
+    loadResult = soundLoad(sound, path);
+    if (loadResult == 0) {
         return sound;
     }
 

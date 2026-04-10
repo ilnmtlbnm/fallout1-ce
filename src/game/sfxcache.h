@@ -7,7 +7,7 @@ namespace fallout {
 // simultaneously.
 #define SOUND_EFFECTS_MAX_COUNT 4
 
-int sfxc_init(int cache_size, const char* effectsPath);
+int sfxc_init(int cache_size, const char* effectsPath, int compression);
 void sfxc_exit();
 int sfxc_is_initialized();
 void sfxc_flush();

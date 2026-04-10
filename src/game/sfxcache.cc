@@ -67,8 +67,10 @@ static bool sfxc_initialized = false;
 static int sfxc_cmpr = 1;
 
 // 0x497140
-int sfxc_init(int cacheSize, const char* effectsPath)
+int sfxc_init(int cacheSize, const char* effectsPath, int compression)
 {
+    sfxc_cmpr = compression;
+
     if (!config_get_value(&game_config, GAME_CONFIG_SOUND_KEY, GAME_CONFIG_DEBUG_SFXC_KEY, &sfxc_dlevel)) {
         sfxc_dlevel = 1;
     }
