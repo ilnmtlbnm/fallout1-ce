@@ -1,7 +1,6 @@
 #include "int/audio.h"
 
 #include <assert.h>
-#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -27,7 +26,6 @@ typedef struct Audio {
     int sampleRate;
     int channels;
     int position;
-    bool is8bitRaw;
 } Audio;
 
 static bool defaultCompressionFunc(char* filePath);
@@ -118,7 +116,6 @@ int audioOpen(const char* fname, int flags)
     Audio* audioFile = &(audio[index]);
     audioFile->flags = AUDIO_FILE_IN_USE;
     audioFile->stream = stream;
-    audioFile->is8bitRaw = false;
 
     if (compression == 2) {
         audioFile->flags |= AUDIO_FILE_COMPRESSED;
@@ -126,11 +123,6 @@ int audioOpen(const char* fname, int flags)
         audioFile->fileSize *= 2;
     } else {
         audioFile->fileSize = db_filelength(stream);
-        const char* ext = strrchr(fname, '.');
-        if (ext != NULL && (strcasecmp(ext, ".snd") == 0)) {
-            audioFile->is8bitRaw = true;
-            audioFile->fileSize *= 2;
-        }
     }
 
     audioFile->position = 0;
@@ -161,16 +153,6 @@ int audioRead(int fileHandle, void* buffer, unsigned int size)
     int bytesRead;
     if ((audioFile->flags & AUDIO_FILE_COMPRESSED) != 0) {
         bytesRead = AudioDecoder_Read(audioFile->audioDecoder, buffer, size);
-    } else if (audioFile->is8bitRaw) {
-        unsigned int rawSize = size / 2;
-        unsigned char* rawBuf = (unsigned char*)mymalloc(rawSize, __FILE__, __LINE__);
-        unsigned int rawRead = db_fread(rawBuf, 1, rawSize, audioFile->stream);
-        int16_t* out = (int16_t*)buffer;
-        for (unsigned int i = 0; i < rawRead; i++) {
-            out[i] = ((int16_t)rawBuf[i] - 128) << 8;
-        }
-        myfree(rawBuf, __FILE__, __LINE__);
-        bytesRead = (int)(rawRead * 2);
     } else {
         bytesRead = db_fread(buffer, 1, size, audioFile->stream);
     }
@@ -240,11 +222,6 @@ long audioSeek(int fileHandle, long offset, int origin)
         }
 
         return audioFile->position;
-    } else if (audioFile->is8bitRaw) {
-        int filePos = pos / 2;
-        db_fseek(audioFile->stream, filePos, SEEK_SET);
-        audioFile->position = filePos * 2;
-        return audioFile->position;
     } else {
         return db_fseek(audioFile->stream, offset, origin);
     }
@@ -261,9 +238,6 @@ long audioFileSize(int fileHandle)
 long audioTell(int fileHandle)
 {
     Audio* audioFile = &(audio[fileHandle - 1]);
-    if (audioFile->is8bitRaw) {
-        return (long)db_ftell(audioFile->stream) * 2;
-    }
     return audioFile->position;
 }
 

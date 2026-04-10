@@ -69,6 +69,7 @@ char _aSoundSpeech_0[] = "sound\\speech\\";
 
 // 0x505434
 static bool gsound_initialized = false;
+static bool gsound_8bit_sfx = false;
 
 // 0x505438
 static bool gsound_debug = false;
@@ -245,6 +246,13 @@ int gsound_init()
             debug_printf("Failure setting sound I/O calls.\n");
         }
         return -1;
+    }
+
+    // Detect demo SFX format: demo has .SND files, full game has .ACM
+    DB_FILE* probe = db_fopen("sound\\sfx\\butin1.SND", "rb");
+    if (probe != NULL) {
+        db_fclose(probe);
+        gsound_8bit_sfx = true;
     }
 
     add_bk_process(gsound_bkg_proc);
@@ -2099,7 +2107,8 @@ static Sound* gsound_get_sound_ready_for_effect()
 {
     int rc;
 
-    Sound* sound = soundAllocate(5, 10);
+    int sfx_flags = gsound_8bit_sfx ? 0x12 : 0x0A;  // SOUND_8BIT (0x10) vs SOUND_16BIT (0x08), both | SOUND_FLAG_0x02
+    Sound* sound = soundAllocate(5, sfx_flags);
     if (sound == NULL) {
         if (gsound_debug) {
             debug_printf(" Can't allocate sound for effect. ");
