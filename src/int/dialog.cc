@@ -1,13 +1,22 @@
 #include "int/dialog.h"
 
+#include <stdio.h>
 #include <string.h>
 
+#include "fps_limiter.h"
+#include "game/game.h"
+#include "int/intrpret.h"
 #include "int/memdbg.h"
 #include "int/movie.h"
 #include "int/window.h"
 #include "platform_compat.h"
+#include "plib/color/color.h"
+#include "plib/gnw/button.h"
+#include "plib/gnw/debug.h"
 #include "plib/gnw/gnw.h"
 #include "plib/gnw/input.h"
+#include "plib/gnw/kb.h"
+#include "plib/gnw/svga.h"
 #include "plib/gnw/text.h"
 
 namespace fallout {
@@ -162,6 +171,120 @@ static char* replyTitleDefault;
 
 // 0x56DBD4
 static DialogScrollButtonData upButton;
+
+static int text_to_rect_func(unsigned char* buffer, Rect* rect, char* string, int* a4, int height, int pitch, int color, int a7)
+{
+    char* start;
+    if (a4 != NULL) {
+        start = string + *a4;
+    } else {
+        start = string;
+    }
+
+    int maxWidth = rect->lrx - rect->ulx;
+    char* end = NULL;
+    while (start != NULL && *start != '\0') {
+        if (text_width(start) > maxWidth) {
+            end = start + 1;
+            while (*end != '\0' && *end != ' ') {
+                end++;
+            }
+
+            if (*end != '\0') {
+                char* lookahead = end + 1;
+                while (lookahead != NULL) {
+                    while (*lookahead != '\0' && *lookahead != ' ') {
+                        lookahead++;
+                    }
+
+                    if (*lookahead == '\0') {
+                        lookahead = NULL;
+                    } else {
+                        *lookahead = '\0';
+                        if (text_width(start) >= maxWidth) {
+                            *lookahead = ' ';
+                            lookahead = NULL;
+                        } else {
+                            end = lookahead;
+                            *lookahead = ' ';
+                            lookahead++;
+                        }
+                    }
+                }
+
+                if (*end == ' ') {
+                    *end = '\0';
+                }
+            } else {
+                if (rect->lry - text_height() < rect->uly) {
+                    return rect->uly;
+                }
+
+                if (a7 != 1 || start == string) {
+                    text_to_buf(buffer + pitch * rect->uly + 10, start, maxWidth, pitch, color);
+                } else {
+                    text_to_buf(buffer + pitch * rect->uly, start, maxWidth, pitch, color);
+                }
+
+                if (a4 != NULL) {
+                    *a4 += strlen(start) + 1;
+                }
+
+                rect->uly += height;
+                return rect->uly;
+            }
+        }
+
+        if (text_width(start) > maxWidth) {
+            debug_printf("\nError: display_msg: word too long!");
+            break;
+        }
+
+        if (a7 != 0) {
+            if (rect->lry - text_height() < rect->uly) {
+                if (end != NULL && *end == '\0') {
+                    *end = ' ';
+                }
+                return rect->uly;
+            }
+
+            unsigned char* dest;
+            if (a7 != 1 || start == string) {
+                dest = buffer + 10;
+            } else {
+                dest = buffer;
+            }
+            text_to_buf(dest + pitch * rect->uly, start, maxWidth, pitch, color);
+        }
+
+        if (a4 != NULL && end != NULL) {
+            *a4 += strlen(start) + 1;
+        }
+
+        rect->uly += height;
+
+        if (end != NULL) {
+            start = end + 1;
+            if (*end == '\0') {
+                *end = ' ';
+            }
+            end = NULL;
+        } else {
+            start = NULL;
+        }
+    }
+
+    if (a4 != NULL) {
+        *a4 = 0;
+    }
+
+    return rect->uly;
+}
+
+static int text_to_rect_wrapped(unsigned char* buffer, Rect* rect, char* string, int* a4, int height, int pitch, int color)
+{
+    return text_to_rect_func(buffer, rect, string, a4, height, pitch, color, 1);
+}
 
 // 0x42F434
 static STRUCT_56DAE0_FIELD_4* getReply()
@@ -486,8 +609,46 @@ int dialogTitle(const char* a1)
 // 0x430EFC
 int dialogReply(const char* a1, const char* a2)
 {
-    // TODO: Incomplete.
-    // _replyAddNew(a1, a2);
+    if (tods == -1) {
+        return 1;
+    }
+
+    STRUCT_56DAE0* ptr = &(dialog[tods]);
+
+    ptr->field_8++;
+    if (ptr->field_4 == NULL) {
+        ptr->field_4 = (STRUCT_56DAE0_FIELD_4*)mymalloc(sizeof(STRUCT_56DAE0_FIELD_4), __FILE__, __LINE__);
+    } else {
+        ptr->field_4 = (STRUCT_56DAE0_FIELD_4*)myrealloc(ptr->field_4, sizeof(STRUCT_56DAE0_FIELD_4) * ptr->field_8, __FILE__, __LINE__);
+    }
+
+    int replyIndex = ptr->field_8 - 1;
+    STRUCT_56DAE0_FIELD_4* reply = &(ptr->field_4[replyIndex]);
+    memset(reply, 0, sizeof(STRUCT_56DAE0_FIELD_4));
+
+    reply->field_0 = NULL;
+
+    if (a1 != NULL) {
+        reply->field_4 = (char*)mymalloc(strlen(a1) + 1, __FILE__, __LINE__);
+        strcpy(reply->field_4, a1);
+    } else {
+        reply->field_4 = NULL;
+    }
+
+    if (a2 != NULL) {
+        reply->field_8 = mymalloc(strlen(a2) + 1, __FILE__, __LINE__);
+        strcpy((char*)reply->field_8, a2);
+    } else {
+        reply->field_8 = NULL;
+    }
+
+    reply->field_C = NULL;
+    reply->field_10 = 0;
+    reply->field_14 = 0;
+    reply->field_18 = windowGetFont();
+
+    ptr->field_C = replyIndex;
+
     return 0;
 }
 
@@ -525,8 +686,260 @@ int dialogMessage(const char* a1, const char* a2, int timeout)
 // 0x431088
 int dialogGo(int a1)
 {
-    // TODO: Incomplete.
-    return -1;
+    if (tods == -1) {
+        return -1;
+    }
+
+    STRUCT_56DAE0* dlg = &(dialog[tods]);
+    Program* program = dlg->field_0;
+
+    if (dlg->field_8 <= 0) {
+        return -1;
+    }
+
+    int oldFont = text_curr();
+    text_font(101);
+
+    // Create reply window
+    int rWin = win_add(defaultReply.x, defaultReply.y,
+        defaultReply.width, defaultReply.height, 256, WINDOW_MOVE_ON_TOP);
+    if (rWin == -1) {
+        text_font(oldFont);
+        return -1;
+    }
+
+    // Create options window
+    int oWin = win_add(defaultOption.x, defaultOption.y,
+        defaultOption.width, defaultOption.height, 256, WINDOW_MOVE_ON_TOP);
+    if (oWin == -1) {
+        win_delete(rWin);
+        text_font(oldFont);
+        return -1;
+    }
+
+    inDialog = 1;
+    exitDialog = 0;
+
+    // Compute text colors from RGB values
+    int rColor = colorTable[992] | 0x2000000;
+    if (replyRGBset) {
+        rColor = ((replyR & 0x1F) << 10) | ((replyG & 0x1F) << 5) | (replyB & 0x1F) | 0x2000000;
+    }
+    int oColor = colorTable[992] | 0x2000000;
+    if (optionRGBset) {
+        oColor = ((optionR & 0x1F) << 10) | ((optionG & 0x1F) << 5) | (optionB & 0x1F) | 0x2000000;
+    }
+    int highlightColor = colorTable[32747] | 0x2000000;
+
+    int optionButtons[20];
+    int numRegisteredButtons = 0;
+
+    while (!exitDialog) {
+        int replyIdx = dlg->field_10;
+        if (replyIdx < 0 || replyIdx >= dlg->field_8) {
+            break;
+        }
+
+        STRUCT_56DAE0_FIELD_4* reply = &(dlg->field_4[replyIdx]);
+        int numOptions = reply->field_14;
+        if (numOptions <= 0) {
+            break;
+        }
+
+        // Clear and redraw reply window background
+        if (replyWinDrawCallback != NULL) {
+            replyWinDrawCallback(rWin);
+        }
+
+        // Render reply text
+        char* replyText = (char*)reply->field_8;
+        if (replyText == NULL) {
+            replyText = replyTitleDefault;
+        }
+        if (replyText != NULL) {
+            Rect textRect;
+            textRect.ulx = defaultBorderX;
+            textRect.uly = defaultBorderY;
+            textRect.lrx = defaultReply.width - defaultBorderX;
+            textRect.lry = defaultReply.height - defaultBorderY;
+            text_to_rect_wrapped(win_get_buf(rWin), &textRect, replyText, NULL,
+                text_height(), defaultReply.width, rColor);
+        }
+        win_draw(rWin);
+
+        // Clear and redraw options window background
+        if (optionsWinDrawCallback != NULL) {
+            optionsWinDrawCallback(oWin);
+        }
+
+        // Delete any previously registered buttons
+        for (int i = 0; i < numRegisteredButtons; i++) {
+            win_delete_button(optionButtons[i]);
+        }
+        numRegisteredButtons = 0;
+
+        // Render options and register buttons
+        int optY = defaultBorderY;
+        for (int i = 0; i < numOptions && i < 20; i++) {
+            STRUCT_56DAE0_FIELD_4_FIELD_C* opt = &(reply->field_C[i]);
+            char* optText = opt->field_0;
+            if (optText == NULL) {
+                continue;
+            }
+
+            char numberedText[512];
+            snprintf(numberedText, sizeof(numberedText), "%d. %s", i + 1, optText);
+
+            Rect optRect;
+            optRect.ulx = defaultBorderX;
+            optRect.uly = optY;
+            optRect.lrx = defaultOption.width - defaultBorderX;
+            optRect.lry = defaultOption.height - defaultBorderY;
+            text_to_rect_wrapped(win_get_buf(oWin), &optRect, numberedText, NULL,
+                text_height(), defaultOption.width, oColor);
+
+            int btnHeight = text_height() + defaultSpacing;
+            // Count wrapped lines for accurate button height
+            int lineCount = 1;
+            char** lines = windowWordWrap(numberedText, defaultOption.width - defaultBorderX * 2, 0, &lineCount);
+            if (lines != NULL) {
+                btnHeight = lineCount * text_height() + defaultSpacing;
+                windowFreeWordList(lines, lineCount);
+            }
+
+            optionButtons[numRegisteredButtons] = win_register_button(oWin,
+                defaultBorderX, optY,
+                defaultOption.width - defaultBorderX * 2, btnHeight,
+                1200 + i,  // mouse enter event
+                1300 + i,  // mouse exit event
+                -1,        // mouse down event
+                49 + i,    // mouse up event (key '1' + index)
+                NULL, NULL, NULL, 0);
+            numRegisteredButtons++;
+
+            optY += btnHeight;
+        }
+        win_draw(oWin);
+
+        // Event loop - wait for option selection
+        int chosen = -1;
+        while (chosen == -1 && !exitDialog) {
+            sharedFpsLimiter.mark();
+
+            int keyCode = get_input();
+
+            if (game_user_wants_to_quit != 0) {
+                exitDialog = 1;
+                break;
+            }
+
+            if (keyCode == KEY_ESCAPE) {
+                exitDialog = 1;
+                break;
+            }
+
+            if (keyCode != -1) {
+                // Handle highlight on mouse enter (1200+index)
+                if (keyCode >= 1200 && keyCode < 1200 + numOptions) {
+                    int idx = keyCode - 1200;
+                    // Redraw highlighted option
+                    if (optionsWinDrawCallback != NULL) {
+                        optionsWinDrawCallback(oWin);
+                    }
+                    int oy = defaultBorderY;
+                    for (int j = 0; j < numOptions && j < 20; j++) {
+                        STRUCT_56DAE0_FIELD_4_FIELD_C* o = &(reply->field_C[j]);
+                        if (o->field_0 == NULL) continue;
+                        char nb[512];
+                        snprintf(nb, sizeof(nb), "%d. %s", j + 1, o->field_0);
+                        Rect or2;
+                        or2.ulx = defaultBorderX;
+                        or2.uly = oy;
+                        or2.lrx = defaultOption.width - defaultBorderX;
+                        or2.lry = defaultOption.height - defaultBorderY;
+                        int c = (j == idx) ? highlightColor : oColor;
+                        text_to_rect_wrapped(win_get_buf(oWin), &or2, nb, NULL,
+                            text_height(), defaultOption.width, c);
+                        int lc2 = 1;
+                        char** ls2 = windowWordWrap(nb, defaultOption.width - defaultBorderX * 2, 0, &lc2);
+                        if (ls2) { oy += lc2 * text_height() + defaultSpacing; windowFreeWordList(ls2, lc2); }
+                        else { oy += text_height() + defaultSpacing; }
+                    }
+                    win_draw(oWin);
+                }
+                // Handle unhighlight on mouse exit (1300+index) — just redraw normally
+                else if (keyCode >= 1300 && keyCode < 1300 + numOptions) {
+                    if (optionsWinDrawCallback != NULL) {
+                        optionsWinDrawCallback(oWin);
+                    }
+                    int oy = defaultBorderY;
+                    for (int j = 0; j < numOptions && j < 20; j++) {
+                        STRUCT_56DAE0_FIELD_4_FIELD_C* o = &(reply->field_C[j]);
+                        if (o->field_0 == NULL) continue;
+                        char nb[512];
+                        snprintf(nb, sizeof(nb), "%d. %s", j + 1, o->field_0);
+                        Rect or2;
+                        or2.ulx = defaultBorderX;
+                        or2.uly = oy;
+                        or2.lrx = defaultOption.width - defaultBorderX;
+                        or2.lry = defaultOption.height - defaultBorderY;
+                        text_to_rect_wrapped(win_get_buf(oWin), &or2, nb, NULL,
+                            text_height(), defaultOption.width, oColor);
+                        int lc2 = 1;
+                        char** ls2 = windowWordWrap(nb, defaultOption.width - defaultBorderX * 2, 0, &lc2);
+                        if (ls2) { oy += lc2 * text_height() + defaultSpacing; windowFreeWordList(ls2, lc2); }
+                        else { oy += text_height() + defaultSpacing; }
+                    }
+                    win_draw(oWin);
+                }
+                // Handle numeric key or button click (49 = '1', mapped by button registration)
+                else if (keyCode >= 49 && keyCode < 49 + numOptions) {
+                    chosen = keyCode - 49;
+                }
+            }
+
+            renderPresent();
+            sharedFpsLimiter.throttle();
+        }
+
+        if (chosen == -1) {
+            break;
+        }
+
+        topDialogLine = chosen;
+
+        STRUCT_56DAE0_FIELD_4_FIELD_C* selectedOption = &(reply->field_C[chosen]);
+
+        if (selectedOption->kind == 1) {
+            // Procedure callback — execute the script procedure which will
+            // set up the next dialog node via sayreply/sayoption
+            executeProcedure(program, selectedOption->proc);
+            // The procedure may have called dialogQuit (sets exitDialog=1)
+            // or set up new reply/options. Loop will check on next iteration.
+        } else if (selectedOption->kind == 2) {
+            // String callback — navigate to named reply
+            if (selectedOption->string != NULL) {
+                dialogGotoReply(selectedOption->string);
+            } else {
+                break;
+            }
+        } else {
+            break;
+        }
+    }
+
+    // Cleanup buttons
+    for (int i = 0; i < numRegisteredButtons; i++) {
+        win_delete_button(optionButtons[i]);
+    }
+
+    win_delete(oWin);
+    win_delete(rWin);
+
+    text_font(oldFont);
+    inDialog = 0;
+
+    return 0;
 }
 
 // 0x431184

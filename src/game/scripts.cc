@@ -1144,14 +1144,14 @@ int exec_script_proc(int sid, int action)
 static int scr_build_lookup_table(Script* script)
 {
     int action;
-    int proc = sizeof(Script);
+    int proc;
 
     for (action = 0; action < SCRIPT_PROC_COUNT; action++) {
         proc = interpretFindProcedure(script->program, procTableStrs[action]);
-        if (proc == -1) {
-            proc = SCRIPT_PROC_NO_PROC;
+        if (proc != -1) {
+            script->procs[action] = proc;
         }
-        script->procs[action] = proc;
+        // If not found, keep existing value (0 = fallback to start procedure)
     }
 
     return 0;
