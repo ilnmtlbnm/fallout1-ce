@@ -737,6 +737,9 @@ int dialogGo(int a1)
     inDialog = 1;
     exitDialog = 0;
 
+    // Flush stale input events from previous dialog node
+    flush_input_buffer();
+
     // Draw reply window
     if (replyWinDrawCallback != NULL) {
         replyWinDrawCallback(rWin);
@@ -822,7 +825,6 @@ int dialogGo(int a1)
         STRUCT_56DAE0_FIELD_4_FIELD_C* selectedOption = &(reply->field_C[chosen]);
 
         if (selectedOption->kind == 1) {
-            // Proc callback — return proc index for caller to execute
             result = selectedOption->proc;
         } else if (selectedOption->kind == 2 && selectedOption->string != NULL) {
             dialogGotoReply(selectedOption->string);
@@ -843,6 +845,14 @@ int dialogGo(int a1)
 }
 
 // 0x431184
+int dialogGetReplyCount()
+{
+    if (tods == -1) {
+        return 0;
+    }
+    return dialog[tods].field_8;
+}
+
 int dialogGetExitPoint()
 {
     return topDialogLine + (topDialogReply << 16);

@@ -4,6 +4,7 @@
 
 #include "int/datafile.h"
 #include "int/dialog.h"
+#include "game/gdialog.h"
 #include "int/memdbg.h"
 #include "int/mousemgr.h"
 #include "int/nevs.h"
@@ -833,16 +834,18 @@ static void op_sayoption(Program* program)
         v1 = NULL;
     }
     if ((v3.opcode & VALUE_TYPE_MASK) == VALUE_TYPE_STRING) {
-        const char* v2 = interpretGetString(program, v3.opcode, v3.integerValue);
-        if (dialogOption(v1, v2) != 0) {
-            program->flags &= ~PROGRAM_FLAG_0x20;
-            interpretError("Error setting option.");
+        const char* v2str = interpretGetString(program, v3.opcode, v3.integerValue);
+        // Bridge to gsay_* system: string goto option
+        if (v1 != NULL) {
+            gDialogOptionStr(-4, v1, v2str, 50);
         }
+        dialogOption(v1, v2str);
     } else if ((v3.opcode & VALUE_TYPE_MASK) == VALUE_TYPE_INT) {
-        if (dialogOptionProc(v1, v3.integerValue) != 0) {
-            program->flags &= ~PROGRAM_FLAG_0x20;
-            interpretError("Error setting option.");
+        // Bridge to gsay_* system: proc callback option
+        if (v1 != NULL) {
+            gDialogOptionProcStr(-4, v1, v3.integerValue, 50);
         }
+        dialogOptionProc(v1, v3.integerValue);
     } else {
         interpretError("Invalid arg 2 to sayOption");
     }
@@ -872,10 +875,13 @@ static void op_sayreply(Program* program)
         v2 = NULL;
     }
 
-    if (dialogReply(v1, v2) != 0) {
-        program->flags &= ~PROGRAM_FLAG_0x20;
-        interpretError("Error setting option.");
+    // Bridge to gsay_* system: populate dialogBlock for gDialogGo
+    if (v2 != NULL) {
+        gDialogReplyStr(program, -4, v2);
     }
+
+    // Also maintain say_* data for dialogGotoReply/dialogGetExitPoint
+    dialogReply(v1, v2);
 
     program->flags &= ~PROGRAM_FLAG_0x20;
 }
@@ -891,29 +897,9 @@ static int checkDialog(Program* program)
 static void op_sayend(Program* program)
 {
     program->flags |= PROGRAM_FLAG_0x20;
-
-    for (;;) {
-        int rc = dialogGo(sayStartingPosition);
-        if (rc == -1) {
-            break;
-        }
-        if (rc == -2) {
-            // String goto — dialogGo already called dialogGotoReply,
-            // just re-enter dialogGo for the target reply
-            continue;
-        }
-        if (rc >= 0) {
-            // Proc callback — rc is the procedure index
-            program->flags &= ~PROGRAM_FLAG_0x20;
-            executeProcedure(program, rc);
-            program->flags |= PROGRAM_FLAG_0x20;
-            // The callback called sayreply/sayoption to set up the next
-            // dialog node. Loop back to show it.
-            continue;
-        }
-        break;
-    }
-
+    // Bridge to gsay_* system: use the proven gDialogGo event loop
+    // which handles multi-node dialog via gDialogProcessChoice + executeProcedure
+    gDialogGo();
     program->flags &= ~PROGRAM_FLAG_0x20;
 }
 
