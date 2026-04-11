@@ -839,9 +839,15 @@ static void op_sayoption(Program* program)
         gDialogOptionStr(-4, v1 != NULL ? v1 : "", v2str, 50);
         dialogOption(v1, v2str);
     } else if ((v3.opcode & VALUE_TYPE_MASK) == VALUE_TYPE_INT) {
-        // Bridge to gsay_* system: proc callback option
-        gDialogOptionProcStr(-4, v1 != NULL ? v1 : "", v3.integerValue, 50);
-        dialogOptionProc(v1, v3.integerValue);
+        if ((v1 == NULL || v1[0] == '\0') && v3.integerValue == 0) {
+            // Empty text + no callback = "Done" option
+            gDialogOption(-2, -2, NULL, 50);
+            dialogOptionProc(v1, 0);
+        } else {
+            // Bridge to gsay_* system: proc callback option
+            gDialogOptionProcStr(-4, v1 != NULL ? v1 : "", v3.integerValue, 50);
+            dialogOptionProc(v1, v3.integerValue);
+        }
     } else {
         interpretError("Invalid arg 2 to sayOption");
     }
@@ -961,10 +967,12 @@ static void op_saymessage(Program* program)
         v2 = NULL;
     }
 
-    if (dialogMessage(v1, v2, TimeOut) != 0) {
-        program->flags &= ~PROGRAM_FLAG_0x20;
-        interpretError("Error setting option.");
+    // Bridge to gsay_* dialog system instead of stub dialogMessage()
+    if (v2 != NULL) {
+        gDialogReplyStr(program, -4, v2);
     }
+    gDialogOption(-2, -2, NULL, 50);
+    gDialogSayMessage();
 
     program->flags &= ~PROGRAM_FLAG_0x20;
 }

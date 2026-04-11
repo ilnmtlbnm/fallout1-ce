@@ -1360,6 +1360,7 @@ static int proto_read_protoSubNode(Proto* proto, DB_FILE* stream)
         } else {
             proto->item.field_80 = 0;
         }
+        memset(&proto->item.data, 0, sizeof(proto->item.data));
         if (proto_read_item_data(&(proto->item.data), proto->item.type, stream) == -1) return -1;
 
         return 0;

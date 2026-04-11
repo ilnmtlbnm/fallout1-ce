@@ -574,6 +574,18 @@ int gdialog_init()
 // 0x43DE0C
 int gdialog_reset()
 {
+    dialogue_switch_mode = 0;
+
+    if (gdialog_state == 1) {
+        scr_dialogue_exit();
+    }
+
+    gdialog_state = -1;
+    dialogue_state = 0;
+    dialogue_switch_mode = 0;
+    gdNumOptions = 0;
+    curReviewSlot = 0;
+
     gdialog_free_speech();
     return 0;
 }
@@ -1292,6 +1304,12 @@ static int gDialogProcess()
         }
 
         if (game_user_wants_to_quit != 0) {
+            break;
+        }
+
+        if (keyCode == KEY_ESCAPE) {
+            gdNumOptions = 0;
+            dialogBlock.replyMessageListId = -1;
             break;
         }
 
@@ -2894,72 +2912,28 @@ static void talk_to_pressed_barter(int btn, int keyCode)
 
     Proto* proto;
     proto_ptr(dialog_target->pid, &proto);
-    if ((proto->critter.data.flags & CRITTER_BARTER) != 0) {
-        if (gdialog_speech_playing) {
-            if (soundPlaying(lip_info.sound)) {
-                gdialog_free_speech();
-            }
-        }
+    MessageListItem messageListItem;
+    // This person will not barter with you. (Also shown for CRITTER_BARTER in demo — barter UI unavailable.)
+    messageListItem.num = 903;
 
-        dialogue_switch_mode = 2;
-        dialogue_state = 4;
-
-        // NOTE: Uninline.
-        gdialog_hide();
+    if (message_search(&proto_main_msg_file, &messageListItem)) {
+        gdialog_display_msg(messageListItem.text);
     } else {
-        MessageListItem messageListItem;
-        // This person will not barter with you.
-        messageListItem.num = 903;
-
-        if (message_search(&proto_main_msg_file, &messageListItem)) {
-            gdialog_display_msg(messageListItem.text);
-        } else {
-            debug_printf("\nError: gdialog: Can't find message!");
-        }
+        debug_printf("\nError: gdialog: Can't find message!");
     }
 }
 
 // 0x440FB4
 static void talk_to_pressed_about(int btn, int keyCode)
 {
+    // "Tell Me About" is not available in the demo.
     MessageListItem mesg;
-    int reaction;
-    int reaction_level;
-
-    if (PID_TYPE(dialog_target->pid) == OBJ_TYPE_CRITTER) {
-        reaction = reaction_get(dialog_target);
-        reaction_level = reaction_to_level(reaction);
-        if (reaction_level != 0) {
-            if (map_data.field_34 != 35) {
-                if (gdialog_speech_playing == 1) {
-                    if (soundPlay(lip_info.sound)) {
-                        gdialog_free_speech();
-                    }
-                }
-
-                dialogue_switch_mode = 5;
-                gdialog_hide();
-            } else {
-                mesg.num = 904;
-                if (message_search(&proto_main_msg_file, &mesg) != 1) {
-                    debug_printf("\nError: gdialog: Can't find message!");
-                }
-                gdialog_display_msg(mesg.text);
-            }
-        } else {
-            mesg.num = 904;
-            if (message_search(&proto_main_msg_file, &mesg) != 1) {
-                debug_printf("\nError: gdialog: Can't find message!");
-            }
-            // NOTE: Message is not used.
-        }
-    } else {
-        mesg.num = 904;
-        if (message_search(&proto_main_msg_file, &mesg) != 1) {
-            debug_printf("\nError: gdialog: Can't find message!");
-        }
-        // NOTE: Message is not used.
+    mesg.num = 904;
+    if (message_search(&proto_main_msg_file, &mesg) != 1) {
+        debug_printf("\nError: gdialog: Can't find message!");
+        return;
     }
+    gdialog_display_msg(mesg.text);
 }
 
 // NOTE: Uncollapsed 0x445CA0 with different signature.

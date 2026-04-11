@@ -2095,7 +2095,7 @@ void combat_end()
                 Object* critterWhoHitMe = critter->data.critter.combat.whoHitMe;
                 if (critterTeam != dudeTeam || (critterWhoHitMe != NULL && critterWhoHitMe->data.critter.combat.team == critterTeam)) {
                     if (!combatai_want_to_stop(critter)) {
-                        messageListItem.num = 103;
+                        messageListItem.num = 519;
                         if (message_search(&combat_message_file, &messageListItem)) {
                             display_print(messageListItem.text);
                         }
@@ -2112,7 +2112,7 @@ void combat_end()
                 Object* critterWhoHitMe = critter->data.critter.combat.whoHitMe;
                 if (critterTeam != dudeTeam || (critterWhoHitMe != NULL && critterWhoHitMe->data.critter.combat.team == critterTeam)) {
                     if (combatai_want_to_join(critter)) {
-                        messageListItem.num = 103;
+                        messageListItem.num = 519;
                         if (message_search(&combat_message_file, &messageListItem)) {
                             display_print(messageListItem.text);
                         }
