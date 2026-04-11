@@ -530,20 +530,19 @@ int dialogStart(Program* a1)
 {
     STRUCT_56DAE0* ptr;
 
-    if (tods == 3) {
+    if (tods >= 3) {
         return 1;
     }
+
+    tods++;
 
     ptr = &(dialog[tods]);
     ptr->field_0 = a1;
     ptr->field_4 = 0;
     ptr->field_8 = 0;
     ptr->field_C = -1;
-    ptr->field_10 = -1;
+    ptr->field_10 = 0;
     ptr->field_14 = 1;
-    ptr->field_10 = 1;
-
-    tods++;
 
     return 0;
 }
@@ -691,14 +690,27 @@ int dialogGo(int a1)
     }
 
     STRUCT_56DAE0* dlg = &(dialog[tods]);
-    Program* program = dlg->field_0;
 
     if (dlg->field_8 <= 0) {
         return -1;
     }
 
+    int replyIdx = dlg->field_10;
+    if (replyIdx < 0 || replyIdx >= dlg->field_8) {
+        return -1;
+    }
+
+    STRUCT_56DAE0_FIELD_4* reply = &(dlg->field_4[replyIdx]);
+    int numOptions = reply->field_14;
+    if (numOptions <= 0) {
+        return -1;
+    }
+
     int oldFont = text_curr();
     text_font(101);
+
+    int rColor = colorTable[992] | 0x2000000;
+    int oColor = colorTable[992] | 0x2000000;
 
     // Create reply window
     int rWin = win_add(defaultReply.x, defaultReply.y,
@@ -717,227 +729,82 @@ int dialogGo(int a1)
         return -1;
     }
 
+    // Draw reply window background
+    if (replyWinDrawCallback != NULL) {
+        replyWinDrawCallback(rWin);
+    }
+
+    // Render reply text
+    char* replyText = (char*)reply->field_8;
+    if (replyText != NULL) {
+        win_print(rWin, replyText, defaultReply.width - defaultBorderX * 2,
+            defaultBorderX, defaultBorderY, rColor);
+    }
+    win_draw(rWin);
+
+    // Draw options window background
+    if (optionsWinDrawCallback != NULL) {
+        optionsWinDrawCallback(oWin);
+    }
+
+    // Render options as simple text lines
+    int optY = defaultBorderY;
+    for (int i = 0; i < numOptions && i < 20; i++) {
+        STRUCT_56DAE0_FIELD_4_FIELD_C* opt = &(reply->field_C[i]);
+        if (opt->field_0 != NULL) {
+            char numberedText[512];
+            snprintf(numberedText, sizeof(numberedText), "%d. %s", i + 1, opt->field_0);
+            win_print(oWin, numberedText, defaultOption.width - defaultBorderX * 2,
+                defaultBorderX, optY, oColor);
+            optY += text_height() + defaultSpacing;
+        }
+    }
+    win_draw(oWin);
+
+    // Minimal event loop — wait for numeric key or Escape
     inDialog = 1;
     exitDialog = 0;
+    int chosen = -1;
 
-    // Compute text colors from RGB values
-    int rColor = colorTable[992] | 0x2000000;
-    if (replyRGBset) {
-        rColor = ((replyR & 0x1F) << 10) | ((replyG & 0x1F) << 5) | (replyB & 0x1F) | 0x2000000;
-    }
-    int oColor = colorTable[992] | 0x2000000;
-    if (optionRGBset) {
-        oColor = ((optionR & 0x1F) << 10) | ((optionG & 0x1F) << 5) | (optionB & 0x1F) | 0x2000000;
-    }
-    int highlightColor = colorTable[32747] | 0x2000000;
+    while (chosen == -1 && !exitDialog) {
+        sharedFpsLimiter.mark();
 
-    int optionButtons[20];
-    int numRegisteredButtons = 0;
+        int keyCode = get_input();
 
-    while (!exitDialog) {
-        int replyIdx = dlg->field_10;
-        if (replyIdx < 0 || replyIdx >= dlg->field_8) {
+        if (game_user_wants_to_quit != 0) {
             break;
         }
 
-        STRUCT_56DAE0_FIELD_4* reply = &(dlg->field_4[replyIdx]);
-        int numOptions = reply->field_14;
-        if (numOptions <= 0) {
+        if (keyCode == KEY_ESCAPE) {
             break;
         }
 
-        // Clear and redraw reply window background
-        if (replyWinDrawCallback != NULL) {
-            replyWinDrawCallback(rWin);
-        }
-
-        // Render reply text
-        char* replyText = (char*)reply->field_8;
-        if (replyText == NULL) {
-            replyText = replyTitleDefault;
-        }
-        if (replyText != NULL) {
-            Rect textRect;
-            textRect.ulx = defaultBorderX;
-            textRect.uly = defaultBorderY;
-            textRect.lrx = defaultReply.width - defaultBorderX;
-            textRect.lry = defaultReply.height - defaultBorderY;
-            text_to_rect_wrapped(win_get_buf(rWin), &textRect, replyText, NULL,
-                text_height(), defaultReply.width, rColor);
-        }
-        win_draw(rWin);
-
-        // Clear and redraw options window background
-        if (optionsWinDrawCallback != NULL) {
-            optionsWinDrawCallback(oWin);
-        }
-
-        // Delete any previously registered buttons
-        for (int i = 0; i < numRegisteredButtons; i++) {
-            win_delete_button(optionButtons[i]);
-        }
-        numRegisteredButtons = 0;
-
-        // Render options and register buttons
-        int optY = defaultBorderY;
-        for (int i = 0; i < numOptions && i < 20; i++) {
-            STRUCT_56DAE0_FIELD_4_FIELD_C* opt = &(reply->field_C[i]);
-            char* optText = opt->field_0;
-            if (optText == NULL) {
-                continue;
+        // Numeric keys 1-9
+        if (keyCode >= '1' && keyCode <= '9') {
+            int opt = keyCode - '1';
+            if (opt < numOptions) {
+                chosen = opt;
             }
-
-            char numberedText[512];
-            snprintf(numberedText, sizeof(numberedText), "%d. %s", i + 1, optText);
-
-            Rect optRect;
-            optRect.ulx = defaultBorderX;
-            optRect.uly = optY;
-            optRect.lrx = defaultOption.width - defaultBorderX;
-            optRect.lry = defaultOption.height - defaultBorderY;
-            text_to_rect_wrapped(win_get_buf(oWin), &optRect, numberedText, NULL,
-                text_height(), defaultOption.width, oColor);
-
-            int btnHeight = text_height() + defaultSpacing;
-            // Count wrapped lines for accurate button height
-            int lineCount = 1;
-            char** lines = windowWordWrap(numberedText, defaultOption.width - defaultBorderX * 2, 0, &lineCount);
-            if (lines != NULL) {
-                btnHeight = lineCount * text_height() + defaultSpacing;
-                windowFreeWordList(lines, lineCount);
-            }
-
-            optionButtons[numRegisteredButtons] = win_register_button(oWin,
-                defaultBorderX, optY,
-                defaultOption.width - defaultBorderX * 2, btnHeight,
-                1200 + i,  // mouse enter event
-                1300 + i,  // mouse exit event
-                -1,        // mouse down event
-                49 + i,    // mouse up event (key '1' + index)
-                NULL, NULL, NULL, 0);
-            numRegisteredButtons++;
-
-            optY += btnHeight;
-        }
-        win_draw(oWin);
-
-        // Event loop - wait for option selection
-        int chosen = -1;
-        while (chosen == -1 && !exitDialog) {
-            sharedFpsLimiter.mark();
-
-            int keyCode = get_input();
-
-            if (game_user_wants_to_quit != 0) {
-                exitDialog = 1;
-                break;
-            }
-
-            if (keyCode == KEY_ESCAPE) {
-                exitDialog = 1;
-                break;
-            }
-
-            if (keyCode != -1) {
-                // Handle highlight on mouse enter (1200+index)
-                if (keyCode >= 1200 && keyCode < 1200 + numOptions) {
-                    int idx = keyCode - 1200;
-                    // Redraw highlighted option
-                    if (optionsWinDrawCallback != NULL) {
-                        optionsWinDrawCallback(oWin);
-                    }
-                    int oy = defaultBorderY;
-                    for (int j = 0; j < numOptions && j < 20; j++) {
-                        STRUCT_56DAE0_FIELD_4_FIELD_C* o = &(reply->field_C[j]);
-                        if (o->field_0 == NULL) continue;
-                        char nb[512];
-                        snprintf(nb, sizeof(nb), "%d. %s", j + 1, o->field_0);
-                        Rect or2;
-                        or2.ulx = defaultBorderX;
-                        or2.uly = oy;
-                        or2.lrx = defaultOption.width - defaultBorderX;
-                        or2.lry = defaultOption.height - defaultBorderY;
-                        int c = (j == idx) ? highlightColor : oColor;
-                        text_to_rect_wrapped(win_get_buf(oWin), &or2, nb, NULL,
-                            text_height(), defaultOption.width, c);
-                        int lc2 = 1;
-                        char** ls2 = windowWordWrap(nb, defaultOption.width - defaultBorderX * 2, 0, &lc2);
-                        if (ls2) { oy += lc2 * text_height() + defaultSpacing; windowFreeWordList(ls2, lc2); }
-                        else { oy += text_height() + defaultSpacing; }
-                    }
-                    win_draw(oWin);
-                }
-                // Handle unhighlight on mouse exit (1300+index) — just redraw normally
-                else if (keyCode >= 1300 && keyCode < 1300 + numOptions) {
-                    if (optionsWinDrawCallback != NULL) {
-                        optionsWinDrawCallback(oWin);
-                    }
-                    int oy = defaultBorderY;
-                    for (int j = 0; j < numOptions && j < 20; j++) {
-                        STRUCT_56DAE0_FIELD_4_FIELD_C* o = &(reply->field_C[j]);
-                        if (o->field_0 == NULL) continue;
-                        char nb[512];
-                        snprintf(nb, sizeof(nb), "%d. %s", j + 1, o->field_0);
-                        Rect or2;
-                        or2.ulx = defaultBorderX;
-                        or2.uly = oy;
-                        or2.lrx = defaultOption.width - defaultBorderX;
-                        or2.lry = defaultOption.height - defaultBorderY;
-                        text_to_rect_wrapped(win_get_buf(oWin), &or2, nb, NULL,
-                            text_height(), defaultOption.width, oColor);
-                        int lc2 = 1;
-                        char** ls2 = windowWordWrap(nb, defaultOption.width - defaultBorderX * 2, 0, &lc2);
-                        if (ls2) { oy += lc2 * text_height() + defaultSpacing; windowFreeWordList(ls2, lc2); }
-                        else { oy += text_height() + defaultSpacing; }
-                    }
-                    win_draw(oWin);
-                }
-                // Handle numeric key or button click (49 = '1', mapped by button registration)
-                else if (keyCode >= 49 && keyCode < 49 + numOptions) {
-                    chosen = keyCode - 49;
-                }
-            }
-
-            renderPresent();
-            sharedFpsLimiter.throttle();
         }
 
-        if (chosen == -1) {
-            break;
-        }
-
-        topDialogLine = chosen;
-
-        STRUCT_56DAE0_FIELD_4_FIELD_C* selectedOption = &(reply->field_C[chosen]);
-
-        if (selectedOption->kind == 1) {
-            // Procedure callback — execute the script procedure which will
-            // set up the next dialog node via sayreply/sayoption
-            executeProcedure(program, selectedOption->proc);
-            // The procedure may have called dialogQuit (sets exitDialog=1)
-            // or set up new reply/options. Loop will check on next iteration.
-        } else if (selectedOption->kind == 2) {
-            // String callback — navigate to named reply
-            if (selectedOption->string != NULL) {
-                dialogGotoReply(selectedOption->string);
-            } else {
-                break;
-            }
-        } else {
-            break;
-        }
-    }
-
-    // Cleanup buttons
-    for (int i = 0; i < numRegisteredButtons; i++) {
-        win_delete_button(optionButtons[i]);
+        renderPresent();
+        sharedFpsLimiter.throttle();
     }
 
     win_delete(oWin);
     win_delete(rWin);
-
     text_font(oldFont);
     inDialog = 0;
+
+    if (chosen >= 0) {
+        topDialogLine = chosen;
+        STRUCT_56DAE0_FIELD_4_FIELD_C* selectedOption = &(reply->field_C[chosen]);
+        if (selectedOption->kind == 1) {
+            executeProcedure(dlg->field_0, selectedOption->proc);
+        } else if (selectedOption->kind == 2 && selectedOption->string != NULL) {
+            dialogGotoReply(selectedOption->string);
+        }
+    }
 
     return 0;
 }
