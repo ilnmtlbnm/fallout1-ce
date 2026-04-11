@@ -827,8 +827,14 @@ int dialogGo(int a1)
 
         if (selectedOption->kind == 1) {
             // Proc callback: execute script procedure which calls
-            // sayreply/sayoption to set up the next dialog node
-            executeProcedure(dlg->field_0, selectedOption->proc);
+            // sayreply/sayoption to set up the next dialog node.
+            // Clear PROGRAM_FLAG_0x20 temporarily — op_sayend sets it,
+            // and interpret() refuses to run when it's set.
+            Program* program = dlg->field_0;
+            int savedFlags = program->flags;
+            program->flags &= ~0x20;
+            executeProcedure(program, selectedOption->proc);
+            program->flags = savedFlags;
             // Point to the newly added reply for next iteration
             if (dlg->field_C >= 0 && dlg->field_C < dlg->field_8) {
                 dlg->field_10 = dlg->field_C;
