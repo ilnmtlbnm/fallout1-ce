@@ -695,24 +695,13 @@ int dialogGo(int a1)
         return -1;
     }
 
-    int replyIdx = dlg->field_10;
-    if (replyIdx < 0 || replyIdx >= dlg->field_8) {
-        return -1;
-    }
-
-    STRUCT_56DAE0_FIELD_4* reply = &(dlg->field_4[replyIdx]);
-    int numOptions = reply->field_14;
-    if (numOptions <= 0) {
-        return -1;
-    }
-
     int oldFont = text_curr();
     text_font(101);
 
     int rColor = colorTable[992] | 0x2000000;
     int oColor = colorTable[992] | 0x2000000;
 
-    // Create reply window
+    // Create reply and options windows (persist across dialog nodes)
     int rWin = win_add(defaultReply.x, defaultReply.y,
         defaultReply.width, defaultReply.height, 256, WINDOW_MOVE_ON_TOP);
     if (rWin == -1) {
@@ -720,7 +709,6 @@ int dialogGo(int a1)
         return -1;
     }
 
-    // Create options window
     int oWin = win_add(defaultOption.x, defaultOption.y,
         defaultOption.width, defaultOption.height, 256, WINDOW_MOVE_ON_TOP);
     if (oWin == -1) {
@@ -729,82 +717,137 @@ int dialogGo(int a1)
         return -1;
     }
 
-    // Draw reply window background
-    if (replyWinDrawCallback != NULL) {
-        replyWinDrawCallback(rWin);
-    }
-
-    // Render reply text
-    char* replyText = (char*)reply->field_8;
-    if (replyText != NULL) {
-        win_print(rWin, replyText, defaultReply.width - defaultBorderX * 2,
-            defaultBorderX, defaultBorderY, rColor);
-    }
-    win_draw(rWin);
-
-    // Draw options window background
-    if (optionsWinDrawCallback != NULL) {
-        optionsWinDrawCallback(oWin);
-    }
-
-    // Render options as simple text lines
-    int optY = defaultBorderY;
-    for (int i = 0; i < numOptions && i < 20; i++) {
-        STRUCT_56DAE0_FIELD_4_FIELD_C* opt = &(reply->field_C[i]);
-        if (opt->field_0 != NULL) {
-            char numberedText[512];
-            snprintf(numberedText, sizeof(numberedText), "%d. %s", i + 1, opt->field_0);
-            win_print(oWin, numberedText, defaultOption.width - defaultBorderX * 2,
-                defaultBorderX, optY, oColor);
-            optY += text_height() + defaultSpacing;
-        }
-    }
-    win_draw(oWin);
-
-    // Minimal event loop — wait for numeric key or Escape
     inDialog = 1;
     exitDialog = 0;
-    int chosen = -1;
 
-    while (chosen == -1 && !exitDialog) {
-        sharedFpsLimiter.mark();
+    int optionButtons[20];
+    int numButtons = 0;
 
-        int keyCode = get_input();
-
-        if (game_user_wants_to_quit != 0) {
+    // Main dialog loop — keeps going through dialog nodes
+    while (!exitDialog) {
+        int replyIdx = dlg->field_10;
+        if (replyIdx < 0 || replyIdx >= dlg->field_8) {
             break;
         }
 
-        if (keyCode == KEY_ESCAPE) {
+        STRUCT_56DAE0_FIELD_4* reply = &(dlg->field_4[replyIdx]);
+        int numOptions = reply->field_14;
+        if (numOptions <= 0) {
             break;
         }
 
-        // Numeric keys 1-9
-        if (keyCode >= '1' && keyCode <= '9') {
-            int opt = keyCode - '1';
-            if (opt < numOptions) {
-                chosen = opt;
+        // Clean up buttons from previous iteration
+        for (int i = 0; i < numButtons; i++) {
+            win_delete_button(optionButtons[i]);
+        }
+        numButtons = 0;
+
+        // Draw reply window
+        if (replyWinDrawCallback != NULL) {
+            replyWinDrawCallback(rWin);
+        }
+        char* replyText = (char*)reply->field_8;
+        if (replyText != NULL) {
+            Rect textRect;
+            textRect.ulx = defaultBorderX;
+            textRect.uly = defaultBorderY;
+            textRect.lrx = defaultReply.width - defaultBorderX;
+            textRect.lry = defaultReply.height - defaultBorderY;
+            text_to_rect_wrapped(win_get_buf(rWin), &textRect, replyText, NULL,
+                text_height(), defaultReply.width, rColor);
+        }
+        win_draw(rWin);
+
+        // Draw options window
+        if (optionsWinDrawCallback != NULL) {
+            optionsWinDrawCallback(oWin);
+        }
+        int optY = defaultBorderY;
+        for (int i = 0; i < numOptions && i < 20; i++) {
+            STRUCT_56DAE0_FIELD_4_FIELD_C* opt = &(reply->field_C[i]);
+            if (opt->field_0 != NULL) {
+                char numberedText[512];
+                snprintf(numberedText, sizeof(numberedText), "%d. %s", i + 1, opt->field_0);
+
+                Rect optRect;
+                optRect.ulx = defaultBorderX;
+                optRect.uly = optY;
+                optRect.lrx = defaultOption.width - defaultBorderX;
+                optRect.lry = defaultOption.height - defaultBorderY;
+                text_to_rect_wrapped(win_get_buf(oWin), &optRect, numberedText, NULL,
+                    text_height(), defaultOption.width, oColor);
+
+                int btnHeight = optRect.uly - optY;
+                if (btnHeight < text_height() + defaultSpacing) {
+                    btnHeight = text_height() + defaultSpacing;
+                }
+                optionButtons[numButtons] = win_register_button(oWin,
+                    defaultBorderX, optY,
+                    defaultOption.width - defaultBorderX * 2, btnHeight,
+                    -1, -1, -1, 49 + i,
+                    NULL, NULL, NULL, 0);
+                numButtons++;
+                optY += btnHeight;
             }
         }
+        win_draw(oWin);
 
-        renderPresent();
-        sharedFpsLimiter.throttle();
+        // Wait for option selection
+        int chosen = -1;
+        while (chosen == -1 && !exitDialog) {
+            sharedFpsLimiter.mark();
+
+            int keyCode = get_input();
+
+            if (game_user_wants_to_quit != 0) {
+                exitDialog = 1;
+                break;
+            }
+            if (keyCode == KEY_ESCAPE) {
+                exitDialog = 1;
+                break;
+            }
+            if (keyCode >= '1' && keyCode <= '9') {
+                int opt = keyCode - '1';
+                if (opt < numOptions) {
+                    chosen = opt;
+                }
+            }
+
+            renderPresent();
+            sharedFpsLimiter.throttle();
+        }
+
+        if (chosen == -1) {
+            break;
+        }
+
+        topDialogLine = chosen;
+        STRUCT_56DAE0_FIELD_4_FIELD_C* selectedOption = &(reply->field_C[chosen]);
+
+        if (selectedOption->kind == 1) {
+            // Proc callback: execute script procedure which calls
+            // sayreply/sayoption to set up the next dialog node
+            executeProcedure(dlg->field_0, selectedOption->proc);
+            // Point to the newly added reply for next iteration
+            if (dlg->field_C >= 0 && dlg->field_C < dlg->field_8) {
+                dlg->field_10 = dlg->field_C;
+            }
+        } else if (selectedOption->kind == 2 && selectedOption->string != NULL) {
+            dialogGotoReply(selectedOption->string);
+        } else {
+            break;
+        }
     }
 
+    // Cleanup
+    for (int i = 0; i < numButtons; i++) {
+        win_delete_button(optionButtons[i]);
+    }
     win_delete(oWin);
     win_delete(rWin);
     text_font(oldFont);
     inDialog = 0;
-
-    if (chosen >= 0) {
-        topDialogLine = chosen;
-        STRUCT_56DAE0_FIELD_4_FIELD_C* selectedOption = &(reply->field_C[chosen]);
-        if (selectedOption->kind == 1) {
-            executeProcedure(dlg->field_0, selectedOption->proc);
-        } else if (selectedOption->kind == 2 && selectedOption->string != NULL) {
-            dialogGotoReply(selectedOption->string);
-        }
-    }
 
     return 0;
 }
