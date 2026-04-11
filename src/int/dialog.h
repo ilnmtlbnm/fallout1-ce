@@ -18,6 +18,7 @@ int dialogReply(const char* a1, const char* a2);
 int dialogOption(const char* a1, const char* a2);
 int dialogOptionProc(const char* a1, int a2);
 int dialogMessage(const char* a1, const char* a2, int timeout);
+// Returns: -1 = dialog ended, -2 = string goto (re-enter), >= 0 = proc index to execute
 int dialogGo(int a1);
 int dialogGetExitPoint();
 int dialogQuit();

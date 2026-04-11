@@ -891,13 +891,30 @@ static int checkDialog(Program* program)
 static void op_sayend(Program* program)
 {
     program->flags |= PROGRAM_FLAG_0x20;
-    int rc = dialogGo(sayStartingPosition);
-    program->flags &= ~PROGRAM_FLAG_0x20;
 
-    if (rc == -2) {
-        program->checkWaitFunc = checkDialog;
-        program->flags |= PROGRAM_IS_WAITING;
+    for (;;) {
+        int rc = dialogGo(sayStartingPosition);
+        if (rc == -1) {
+            break;
+        }
+        if (rc == -2) {
+            // String goto — dialogGo already called dialogGotoReply,
+            // just re-enter dialogGo for the target reply
+            continue;
+        }
+        if (rc >= 0) {
+            // Proc callback — rc is the procedure index
+            program->flags &= ~PROGRAM_FLAG_0x20;
+            executeProcedure(program, rc);
+            program->flags |= PROGRAM_FLAG_0x20;
+            // The callback called sayreply/sayoption to set up the next
+            // dialog node. Loop back to show it.
+            continue;
+        }
+        break;
     }
+
+    program->flags &= ~PROGRAM_FLAG_0x20;
 }
 
 // 0x45863C
