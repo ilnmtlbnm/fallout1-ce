@@ -836,15 +836,11 @@ static void op_sayoption(Program* program)
     if ((v3.opcode & VALUE_TYPE_MASK) == VALUE_TYPE_STRING) {
         const char* v2str = interpretGetString(program, v3.opcode, v3.integerValue);
         // Bridge to gsay_* system: string goto option
-        if (v1 != NULL) {
-            gDialogOptionStr(-4, v1, v2str, 50);
-        }
+        gDialogOptionStr(-4, v1 != NULL ? v1 : "", v2str, 50);
         dialogOption(v1, v2str);
     } else if ((v3.opcode & VALUE_TYPE_MASK) == VALUE_TYPE_INT) {
         // Bridge to gsay_* system: proc callback option
-        if (v1 != NULL) {
-            gDialogOptionProcStr(-4, v1, v3.integerValue, 50);
-        }
+        gDialogOptionProcStr(-4, v1 != NULL ? v1 : "", v3.integerValue, 50);
         dialogOptionProc(v1, v3.integerValue);
     } else {
         interpretError("Invalid arg 2 to sayOption");
