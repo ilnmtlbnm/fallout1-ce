@@ -1244,17 +1244,50 @@ static int proto_read_item_data(ItemProtoData* item_data, int type, DB_FILE* str
 
         return 0;
     case ITEM_TYPE_DRUG:
-        if (db_freadInt32(stream, &(item_data->drug.stat[0])) == -1) return -1;
-        if (db_freadInt32(stream, &(item_data->drug.stat[1])) == -1) return -1;
-        if (db_freadInt32(stream, &(item_data->drug.stat[2])) == -1) return -1;
-        if (db_freadIntCount(stream, item_data->drug.amount, 3) == -1) return -1;
-        if (db_freadInt32(stream, &(item_data->drug.duration1)) == -1) return -1;
-        if (db_freadIntCount(stream, item_data->drug.amount1, 3) == -1) return -1;
-        if (db_freadInt32(stream, &(item_data->drug.duration2)) == -1) return -1;
-        if (db_freadIntCount(stream, item_data->drug.amount2, 3) == -1) return -1;
-        if (db_freadInt32(stream, &(item_data->drug.addictionChance)) == -1) return -1;
-        if (db_freadInt32(stream, &(item_data->drug.withdrawalEffect)) == -1) return -1;
-        if (db_freadInt32(stream, &(item_data->drug.withdrawalOnset)) == -1) return -1;
+        if (map_data.version < 19) {
+            // v16 drug format: 9 fields (single stat/amount per bucket)
+            int v16_stat, v16_imm, v16_d1, v16_a1, v16_d2, v16_a2;
+            int v16_addChance, v16_wdEffect, v16_wdOnset;
+            if (db_freadInt32(stream, &v16_stat) == -1) return -1;
+            if (db_freadInt32(stream, &v16_imm) == -1) return -1;
+            if (db_freadInt32(stream, &v16_d1) == -1) return -1;
+            if (db_freadInt32(stream, &v16_a1) == -1) return -1;
+            if (db_freadInt32(stream, &v16_d2) == -1) return -1;
+            if (db_freadInt32(stream, &v16_a2) == -1) return -1;
+            if (db_freadInt32(stream, &v16_addChance) == -1) return -1;
+            if (db_freadInt32(stream, &v16_wdEffect) == -1) return -1;
+            if (db_freadInt32(stream, &v16_wdOnset) == -1) return -1;
+            // Map to v19 struct
+            item_data->drug.stat[0] = v16_stat;
+            item_data->drug.stat[1] = -1;
+            item_data->drug.stat[2] = -1;
+            item_data->drug.amount[0] = v16_imm;
+            item_data->drug.amount[1] = 0;
+            item_data->drug.amount[2] = 0;
+            item_data->drug.duration1 = v16_d1;
+            item_data->drug.amount1[0] = v16_a1;
+            item_data->drug.amount1[1] = 0;
+            item_data->drug.amount1[2] = 0;
+            item_data->drug.duration2 = v16_d2;
+            item_data->drug.amount2[0] = v16_a2;
+            item_data->drug.amount2[1] = 0;
+            item_data->drug.amount2[2] = 0;
+            item_data->drug.addictionChance = v16_addChance;
+            item_data->drug.withdrawalEffect = v16_wdEffect;
+            item_data->drug.withdrawalOnset = v16_wdOnset;
+        } else {
+            if (db_freadInt32(stream, &(item_data->drug.stat[0])) == -1) return -1;
+            if (db_freadInt32(stream, &(item_data->drug.stat[1])) == -1) return -1;
+            if (db_freadInt32(stream, &(item_data->drug.stat[2])) == -1) return -1;
+            if (db_freadIntCount(stream, item_data->drug.amount, 3) == -1) return -1;
+            if (db_freadInt32(stream, &(item_data->drug.duration1)) == -1) return -1;
+            if (db_freadIntCount(stream, item_data->drug.amount1, 3) == -1) return -1;
+            if (db_freadInt32(stream, &(item_data->drug.duration2)) == -1) return -1;
+            if (db_freadIntCount(stream, item_data->drug.amount2, 3) == -1) return -1;
+            if (db_freadInt32(stream, &(item_data->drug.addictionChance)) == -1) return -1;
+            if (db_freadInt32(stream, &(item_data->drug.withdrawalEffect)) == -1) return -1;
+            if (db_freadInt32(stream, &(item_data->drug.withdrawalOnset)) == -1) return -1;
+        }
 
         return 0;
     case ITEM_TYPE_WEAPON:

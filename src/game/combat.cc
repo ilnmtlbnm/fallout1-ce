@@ -4012,9 +4012,13 @@ static void combat_display_flags(char* dest, int flags, Object* critter)
 
     if ((flags & DAM_DEAD) != 0) {
         // " and "
-        messageListItem.num = 108;
-        if (message_search(&combat_message_file, &messageListItem)) {
-            strcat(dest, messageListItem.text);
+        if (map_data.version < 19) {
+            strcat(dest, " and ");
+        } else {
+            messageListItem.num = 108;
+            if (message_search(&combat_message_file, &messageListItem)) {
+                strcat(dest, messageListItem.text);
+            }
         }
 
         // were killed
@@ -4047,9 +4051,13 @@ static void combat_display_flags(char* dest, int flags, Object* critter)
         }
 
         // " and "
-        messageListItem.num = 108;
-        if (message_search(&combat_message_file, &messageListItem)) {
-            strcat(dest, messageListItem.text);
+        if (map_data.version < 19) {
+            strcat(dest, " and ");
+        } else {
+            messageListItem.num = 108;
+            if (message_search(&combat_message_file, &messageListItem)) {
+                strcat(dest, messageListItem.text);
+            }
         }
 
         messageListItem.num = num + flagsList[flagsListLength - 1];

@@ -835,17 +835,22 @@ static void op_sayoption(Program* program)
     }
     if ((v3.opcode & VALUE_TYPE_MASK) == VALUE_TYPE_STRING) {
         const char* v2str = interpretGetString(program, v3.opcode, v3.integerValue);
-        // Bridge to gsay_* system: string goto option
-        gDialogOptionStr(-4, v1 != NULL ? v1 : "", v2str, 50);
+        // Bridge to gsay_* system: string goto option (hidden if no text)
+        if (v1 != NULL && v1[0] != '\0') {
+            gDialogOptionStr(-4, v1, v2str, 50);
+        }
         dialogOption(v1, v2str);
     } else if ((v3.opcode & VALUE_TYPE_MASK) == VALUE_TYPE_INT) {
-        if ((v1 == NULL || v1[0] == '\0') && v3.integerValue == 0) {
-            // Empty text + no callback = "Done" option
-            gDialogOption(-2, -2, NULL, 50);
-            dialogOptionProc(v1, 0);
+        if (v1 == NULL || v1[0] == '\0') {
+            // Empty text = hidden/silent option
+            if (v3.integerValue == 0) {
+                gDialogOption(-2, -2, NULL, 50);  // "[Done]" button
+            }
+            // Don't add to gsay UI for non-zero proc — no visible bullet
+            dialogOptionProc(v1, v3.integerValue);
         } else {
             // Bridge to gsay_* system: proc callback option
-            gDialogOptionProcStr(-4, v1 != NULL ? v1 : "", v3.integerValue, 50);
+            gDialogOptionProcStr(-4, v1, v3.integerValue, 50);
             dialogOptionProc(v1, v3.integerValue);
         }
     } else {
