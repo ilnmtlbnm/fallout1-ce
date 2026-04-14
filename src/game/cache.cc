@@ -8,6 +8,7 @@
 #include "int/sound.h"
 #include "plib/gnw/debug.h"
 #include "plib/gnw/memory.h"
+#include "dusty_log.h"
 
 namespace fallout {
 
@@ -114,8 +115,10 @@ bool cache_lock(Cache* cache, int key, void** data, CacheEntry** cacheEntryPtr)
         // Use existing cache entry.
         CacheEntry* cacheEntry = cache->entries[index];
         cacheEntry->hits++;
+        DUSTY_LOG("vfs", "debug", "cache HIT  key=0x%08X hits=%u", key, cacheEntry->hits);
     } else if (rc == 3) {
         // New cache entry is required.
+        DUSTY_LOG("vfs", "debug", "cache MISS key=0x%08X", key);
         if (cache->entriesLength >= INT_MAX) {
             return false;
         }
