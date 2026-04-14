@@ -1020,7 +1020,9 @@ void gmouse_handle_event(int mouseX, int mouseY, int mouseState)
                 actionMenuItems[actionMenuItemsCount++] = GAME_MOUSE_ACTION_MENU_ITEM_LOOK;
                 if (item_get_type(target) == ITEM_TYPE_CONTAINER) {
                     actionMenuItems[actionMenuItemsCount++] = GAME_MOUSE_ACTION_MENU_ITEM_INVENTORY;
-                    actionMenuItems[actionMenuItemsCount++] = GAME_MOUSE_ACTION_MENU_ITEM_USE_SKILL;
+                    if (art_exists(art_id(OBJ_TYPE_INTERFACE, gmouse_3d_action_nums[GAME_MOUSE_ACTION_MENU_ITEM_USE_SKILL], 0, 0, 0))) {
+                        actionMenuItems[actionMenuItemsCount++] = GAME_MOUSE_ACTION_MENU_ITEM_USE_SKILL;
+                    }
                 }
                 actionMenuItems[actionMenuItemsCount++] = GAME_MOUSE_ACTION_MENU_ITEM_CANCEL;
                 break;
@@ -1039,7 +1041,9 @@ void gmouse_handle_event(int mouseX, int mouseY, int mouseState)
 
                 actionMenuItems[actionMenuItemsCount++] = GAME_MOUSE_ACTION_MENU_ITEM_LOOK;
                 actionMenuItems[actionMenuItemsCount++] = GAME_MOUSE_ACTION_MENU_ITEM_INVENTORY;
-                actionMenuItems[actionMenuItemsCount++] = GAME_MOUSE_ACTION_MENU_ITEM_USE_SKILL;
+                if (art_exists(art_id(OBJ_TYPE_INTERFACE, gmouse_3d_action_nums[GAME_MOUSE_ACTION_MENU_ITEM_USE_SKILL], 0, 0, 0))) {
+                    actionMenuItems[actionMenuItemsCount++] = GAME_MOUSE_ACTION_MENU_ITEM_USE_SKILL;
+                }
                 actionMenuItems[actionMenuItemsCount++] = GAME_MOUSE_ACTION_MENU_ITEM_CANCEL;
                 break;
             case OBJ_TYPE_SCENERY:
@@ -1049,7 +1053,9 @@ void gmouse_handle_event(int mouseX, int mouseY, int mouseState)
 
                 actionMenuItems[actionMenuItemsCount++] = GAME_MOUSE_ACTION_MENU_ITEM_LOOK;
                 actionMenuItems[actionMenuItemsCount++] = GAME_MOUSE_ACTION_MENU_ITEM_INVENTORY;
-                actionMenuItems[actionMenuItemsCount++] = GAME_MOUSE_ACTION_MENU_ITEM_USE_SKILL;
+                if (art_exists(art_id(OBJ_TYPE_INTERFACE, gmouse_3d_action_nums[GAME_MOUSE_ACTION_MENU_ITEM_USE_SKILL], 0, 0, 0))) {
+                    actionMenuItems[actionMenuItemsCount++] = GAME_MOUSE_ACTION_MENU_ITEM_USE_SKILL;
+                }
                 actionMenuItems[actionMenuItemsCount++] = GAME_MOUSE_ACTION_MENU_ITEM_CANCEL;
                 break;
             case OBJ_TYPE_WALL:
