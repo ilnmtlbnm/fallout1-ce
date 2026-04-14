@@ -194,6 +194,11 @@ bool message_load(MessageList* messageList, const char* path)
         // Fallback: try without language prefix (demo compatibility)
         snprintf(localized_path, sizeof(localized_path), "%s\\%s", "text", path);
         file_ptr = db_fopen(localized_path, "rt");
+        if (file_ptr == NULL) {
+            printf("[msg] FAILED to load: text\\%s\\%s AND text\\%s\n", language, path, path);
+        } else {
+            printf("[msg] loaded via fallback: text\\%s\n", path);
+        }
     }
     if (file_ptr == NULL) {
         return false;
