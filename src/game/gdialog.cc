@@ -40,6 +40,7 @@
 #include "plib/gnw/rect.h"
 #include "plib/gnw/svga.h"
 #include "plib/gnw/text.h"
+#include "dusty_log.h"
 
 namespace fallout {
 
@@ -606,6 +607,7 @@ bool dialog_active()
 // 0x43DE28
 void gdialog_enter(Object* target, int a2)
 {
+    DUSTY_LOG("dialog", "info", "enter dialog target pid=0x%x sid=%d tile=%d", target->pid, target->sid, target->tile);
     gdDialogWentOff = false;
 
     if (isInCombat()) {

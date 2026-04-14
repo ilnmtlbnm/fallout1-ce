@@ -16,6 +16,7 @@
 #include "platform_compat.h"
 #include "plib/assoc/assoc.h"
 #include "plib/db/lzss.h"
+#include "dusty_log.h"
 
 namespace fallout {
 
@@ -521,6 +522,7 @@ int db_read_to_buf(const char* filename, unsigned char* buf)
 // 0x4AF9C4
 DB_FILE* db_fopen(const char* filename, const char* mode)
 {
+    DUSTY_LOG("vfs", "debug", "fopen: %s mode=%s", filename, mode);
     bool v1;
     char path[COMPAT_MAX_PATH];
     FILE* stream;

@@ -17,6 +17,7 @@
 #include "plib/gnw/touch.h"
 #include "plib/gnw/vcr.h"
 #include "plib/gnw/winmain.h"
+#include "dusty_log.h"
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
@@ -200,14 +201,18 @@ int get_input()
     process_bk();
 
     v3 = get_input_buffer();
+    int rc;
     if (v3 == -1 && mouse_get_buttons() & 0x33) {
         mouse_get_position(&input_mx, &input_my);
-        return -2;
+        rc = -2;
     } else {
-        return GNW_check_menu_bars(v3);
+        rc = GNW_check_menu_bars(v3);
     }
 
-    return -1;
+    if (rc != -1) {
+        DUSTY_LOG("input", "debug", "get_input: event=%d", rc);
+    }
+    return rc;
 }
 
 // 0x4B3418
