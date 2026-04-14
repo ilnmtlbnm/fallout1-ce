@@ -1065,7 +1065,10 @@ void script_make_path(char* path)
 // 0x492924
 int exec_script_proc(int sid, int action)
 {
-    DUSTY_LOG("script", "debug", "exec proc sid=%d action=%d", sid, action);
+    // Skip critter_p_proc (12) and map_update_p_proc (15) — per-frame ticks.
+    if (action != 12 && action != 15) {
+        DUSTY_LOG("script", "debug", "exec proc sid=%d action=%d", sid, action);
+    }
     if (!script_engine_running) {
         return -1;
     }
