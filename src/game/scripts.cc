@@ -30,6 +30,7 @@
 #include "plib/gnw/input.h"
 #include "plib/gnw/intrface.h"
 #include "plib/gnw/memory.h"
+#include "dusty_log.h"
 
 namespace fallout {
 
@@ -1064,6 +1065,7 @@ void script_make_path(char* path)
 // 0x492924
 int exec_script_proc(int sid, int action)
 {
+    DUSTY_LOG("script", "debug", "exec proc sid=%d action=%d", sid, action);
     if (!script_engine_running) {
         return -1;
     }

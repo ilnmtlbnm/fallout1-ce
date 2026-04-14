@@ -27,6 +27,7 @@
 #include "plib/gnw/rect.h"
 #include "plib/gnw/svga.h"
 #include "plib/gnw/text.h"
+#include "dusty_log.h"
 
 namespace fallout {
 
@@ -837,6 +838,7 @@ void gmouse_bk_process()
 // 0x443AA0
 void gmouse_handle_event(int mouseX, int mouseY, int mouseState)
 {
+    DUSTY_LOG("input", "debug", "mouse event x=%d y=%d state=0x%x", mouseX, mouseY, mouseState);
     if (!gmouse_initialized) {
         return;
     }

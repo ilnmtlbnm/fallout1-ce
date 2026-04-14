@@ -25,6 +25,7 @@
 #include "plib/gnw/input.h"
 #include "plib/gnw/memory.h"
 #include "pointer_registry.h"
+#include "dusty_log.h"
 
 namespace fallout {
 
@@ -1608,6 +1609,7 @@ void gsound_lrg_butt_release(int btn, int keyCode)
 // 0x4492D4
 int gsound_play_sfx_file(const char* name)
 {
+    DUSTY_LOG("audio", "debug", "play sfx: %s", name);
     if (!gsound_initialized) {
         return -1;
     }
