@@ -2538,6 +2538,7 @@ static int db_find_dir_entry(char* path, dir_entry* de)
     }
 
     if (dir_index == -1) {
+        DUSTY_LOG("vfs", "debug", "db_find_dir_entry: dir not found: %s", normalized_path);
         if (pos >= 0) {
             normalized_path[pos] = '\\';
         }
@@ -2549,6 +2550,7 @@ static int db_find_dir_entry(char* path, dir_entry* de)
         if (pos >= 0) {
             normalized_path[pos] = '\\';
         }
+        DUSTY_LOG("vfs", "debug", "db_find_dir_entry: file not found: %s", path);
         return -1;
     }
 
