@@ -1,21 +1,31 @@
 # Asyncify-only whitelist for fallout1-ce Emscripten build.
 #
-# Derivation: emscripten_sleep() is called from two leaf sites:
+# STATUS: INCOMPLETE — build compiles but crashes at runtime.
+# See docs/asyncify-only-plan.md in the platform repo for full analysis.
+#
+# Async leaf sites (emscripten_sleep callers):
 #   - fallout::get_input()       (src/plib/gnw/input.cc:193)
 #   - fallout::FpsLimiter::throttle() const  (src/fps_limiter.cc:25)
 #
-# Both are called from ~70 direct callers across every game module, and
-# the transitive closure (3 levels deep) reaches ~778 functions — essentially
-# the entire fallout:: namespace.
+# Transitive closure: ~778 fallout:: functions + main + libc/stdlib.
+# The fallout::* wildcard covers the game code but ASYNCIFY_ADVISE=1 shows
+# that libc functions (fflush, fgets, fwrite, stdio_*, printf_core, operator
+# new, std::* allocators) are also on the async call path and must be listed.
 #
-# Strategy: instrument the whole fallout:: namespace (game code) plus main.
-# This excludes third-party libs (adecode, fpattern) and libc/SDL internals
-# that are never on an async call path.
+# Missing entries that cause wasm-function[1852] unreachable crash:
+#   fflush, fgets, fwrite, fread, fseek, ftell, fputs, puts
+#   stdio_close, stdio_read, stdio_seek, stdio_write
+#   printf_core, out, pad, pop_arg, vfiprintf, snprintf, vsnprintf
+#   fmt_fp, fiprintf, __vfprintf_internal
+#   scanexp, strtod, __floatscan, sift, trinkle, wrapper_cmp
+#   std::* allocator/vector/deque functions
+#   operator new(unsigned long)
 #
-# audioEngineMixin is excluded via ASYNCIFY_REMOVE (SDL audio callback, must
-# not be async-instrumented). The wildcard below does NOT override that.
+# audioEngineMixin is given extern "C" linkage (audio_engine.cc) so it is
+# not in the fallout:: namespace and is NOT instrumented by this list.
+# ASYNCIFY_REMOVE was dropped (incompatible with ASYNCIFY_ONLY in binaryen).
 #
-# Format: one entry per line, * wildcard supported (binaryen asyncify pass).
+# Format: one entry per line, * wildcard (binaryen asyncify pass).
 # Names match the WebAssembly Names section (human-readable, not mangled).
 fallout::*
 main
