@@ -1168,6 +1168,11 @@ static void gdReviewFree()
 
         entry->optionMessageListId = 0;
         entry->optionMessageId = 0;
+
+        if (entry->optionText != NULL) {
+            mem_free(entry->optionText);
+            entry->optionText = NULL;
+        }
     }
 }
 
