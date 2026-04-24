@@ -1,0 +1,21 @@
+# Asyncify-only whitelist for fallout1-ce Emscripten build.
+#
+# Derivation: emscripten_sleep() is called from two leaf sites:
+#   - fallout::get_input()       (src/plib/gnw/input.cc:193)
+#   - fallout::FpsLimiter::throttle() const  (src/fps_limiter.cc:25)
+#
+# Both are called from ~70 direct callers across every game module, and
+# the transitive closure (3 levels deep) reaches ~778 functions — essentially
+# the entire fallout:: namespace.
+#
+# Strategy: instrument the whole fallout:: namespace (game code) plus main.
+# This excludes third-party libs (adecode, fpattern) and libc/SDL internals
+# that are never on an async call path.
+#
+# audioEngineMixin is excluded via ASYNCIFY_REMOVE (SDL audio callback, must
+# not be async-instrumented). The wildcard below does NOT override that.
+#
+# Format: one entry per line, * wildcard supported (binaryen asyncify pass).
+# Names match the WebAssembly Names section (human-readable, not mangled).
+fallout::*
+main
