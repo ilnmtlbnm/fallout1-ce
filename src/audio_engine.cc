@@ -28,7 +28,9 @@ struct AudioEngineSoundBuffer {
 extern bool GNW95_isActive;
 
 static bool soundBufferIsValid(int soundBufferIndex);
-__attribute__((noinline)) void audioEngineMixin(void* userData, Uint8* stream, int length);
+// extern "C" removes fallout:: namespace prefix from WASM Names section,
+// so ASYNCIFY_ONLY=fallout::* does not instrument the SDL audio callback.
+extern "C" __attribute__((noinline)) void audioEngineMixin(void* userData, Uint8* stream, int length);
 
 static SDL_AudioSpec gAudioEngineSpec;
 static SDL_AudioDeviceID gAudioEngineDeviceId = -1;
@@ -44,7 +46,7 @@ static bool soundBufferIsValid(int soundBufferIndex)
     return soundBufferIndex >= 0 && soundBufferIndex < AUDIO_ENGINE_SOUND_BUFFERS;
 }
 
-__attribute__((noinline)) void audioEngineMixin(void* userData, Uint8* stream, int length)
+extern "C" __attribute__((noinline)) void audioEngineMixin(void* userData, Uint8* stream, int length)
 {
     memset(stream, gAudioEngineSpec.silence, length);
 

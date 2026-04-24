@@ -352,7 +352,6 @@ if(EMSCRIPTEN)
     -sASYNCIFY
     -sASYNCIFY_STACK_SIZE=10000000
     "-sASYNCIFY_ONLY=@${CMAKE_SOURCE_DIR}/asyncify_whitelist.txt"
-    "-sASYNCIFY_REMOVE=[\"_ZN7fallout16audioEngineMixinEPvPhi\"]"
     -sALLOW_MEMORY_GROWTH
     -sEXIT_RUNTIME=1
     -lidbfs.js
