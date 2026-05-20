@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "game/art.h"
+#include "game/bmpdlog.h"
 #include "game/critter.h"
 #include "game/editor.h"
 #include "game/game.h"
@@ -80,6 +81,8 @@ static bool select_display_portrait();
 static bool select_display_stats();
 static bool select_display_bio();
 static bool select_fatal_error(bool rc);
+static bool select_is_demo_build();
+static void select_demo_enforce_gary();
 
 // 0x50797C
 int select_window_id = -1;
@@ -260,8 +263,12 @@ int select_character()
             break;
         case KEY_UPPERCASE_T:
         case KEY_LOWERCASE_T:
-            rc = 2;
-            done = true;
+            if (select_is_demo_build() && premade_index != PREMADE_CHARACTER_NARG) {
+                select_demo_enforce_gary();
+            } else {
+                rc = 2;
+                done = true;
+            }
 
             break;
         case KEY_F10:
@@ -1035,6 +1042,40 @@ static bool select_display_bio()
     text_font(oldFont);
 
     return true;
+}
+
+// Returns true when running under the Falldemo data set.
+// Detection: LSGAME.MSG ID 200 exists only in the demo build (same check used in loadsave.cc).
+static bool select_is_demo_build()
+{
+    MessageList msgfl;
+    if (!message_init(&msgfl)) {
+        return false;
+    }
+
+    char path[COMPAT_MAX_PATH];
+    snprintf(path, sizeof(path), "%sLSGAME.MSG", msg_path);
+    bool is_demo = false;
+    if (message_load(&msgfl, path)) {
+        MessageListItem item;
+        item.num = 200;
+        is_demo = message_search(&msgfl, &item) != 0;
+    }
+    message_exit(&msgfl);
+    return is_demo;
+}
+
+// Show "Gary only" notice and switch premade_index back to NARG (Gary).
+static void select_demo_enforce_gary()
+{
+    const char* title = "Demo Character Only";
+    const char* body = "Only the Gary character is available in the demo. Defaulting to Gary.";
+    const char* lines[] = { body };
+    gsound_play_sfx_file("iisxxxx1");
+    dialog_out(title, lines, 1, 169, 116, colorTable[32328], NULL, colorTable[32328], DIALOG_BOX_LARGE);
+
+    premade_index = PREMADE_CHARACTER_NARG;
+    select_update_display();
 }
 
 // 0x496D4C
